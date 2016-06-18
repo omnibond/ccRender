@@ -133,6 +133,7 @@ class ccModalTimerOperator(bpy.types.Operator):
 
         if communicator.finished is True:
             # finished ok.
+            print ("finished is true.")
             self.cancel(context)
             return {'FINISHED'}
 
@@ -196,6 +197,7 @@ class ccModalTimerOperator(bpy.types.Operator):
         self._count = 0
         self._timer = wm.event_timer_add(0.1, context.window)
         wm.modal_handler_add(self)
+        communicator.finished = False
 
         result = self.validateUpdateInputs(context)
 
@@ -295,5 +297,5 @@ def register():
 
 
 def unregister():
-    bpy.utils.register_class(ccRenderPanel)
-    bpy.utils.register_class(ccModalTimerOperator)
+    bpy.utils.unregister_class(ccRenderPanel)
+    bpy.utils.unregister_class(ccModalTimerOperator)

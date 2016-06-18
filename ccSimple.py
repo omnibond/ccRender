@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 bl_info = {
     "name": "CC Render",
     "author": "Omnibond",
-    "version": (0, 5),
+    "version": (0, 4),
     "blender": (2, 77, 0),
     "location": "View3D > Tools > ccSimple_Render",
     "description": "Cloudy Cluster Simple Render (alpha stage)",
@@ -154,13 +154,10 @@ class ccModalTimerOperator(bpy.types.Operator):
 
         ccSchCheck = urlparse(ccSchedulerURI)
         ccURegex = re.match(r"^[a-z_][a-z0-9_-]*[$]?$", ccUsername)
-
-        #In case validating password rules
-        #is the as same as Username
-        #ccPRegex = re.match(r"^[a-z0-9_]+$", ccPassword)
+        ccPRegex = re.match(r"^[A-Za-z0-9_]+$", ccPassword)
 
         if ccSchCheck.path == '':
-            ccvalidateMsg = "URL needs an IPv4 or Domain Name"
+            ccvalidateMsg = "Invalid URL, it needs an IPv4 or Domain Name"
             print("Error: "+ccvalidateMsg)
             return ccvalidateMsg
 
@@ -172,14 +169,20 @@ class ccModalTimerOperator(bpy.types.Operator):
             return ccvalidateMsg
 
         if ccURegex is None:
-                ccvalidateMsg = 'Invalid Username. Alphanumeric or "_", "-", or "$" allowed only!'
-                print("Error: "+ccvalidateMsg)
-                return ccvalidateMsg
+            ccvalidateMsg = "Invalid Username. Username must be in letters, numbers, '_', '-', or '$'!"
+            print("Error: "+ccvalidateMsg)
+            return ccvalidateMsg
 
+        # Password follows the same rules as username
         if len(ccPassword) > 32:
-            ccvalidteMsg = "Your password is too long!"
-            print("Error: "+ccvalidteMsg)
-            return ccvalidteMsg
+            ccvalidateMsg = "Your password is too long, it must be less than 32 characteristics!"
+            print("Error: "+ccvalidateMsg)
+            return ccvalidateMsg
+
+        if ccPRegex is None:
+            ccvalidateMsg = "Invalid Password! Password must be in letters, numbers, '_', '-', or '$'!"
+            print("Error: "+ccvalidateMsg)
+            return ccvalidateMsg
 
         # write valid inputs into the communicator
         communicator.schedulerURI = ccSchedulerURI

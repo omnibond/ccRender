@@ -6,7 +6,7 @@ sshClient.load_system_host_keys()
 sshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 hostname = "lsketch-bixbitebearcobia.cloudycluster.com"
 username = "craigb"
-password = "Clblc11823"
+password = "********"
 port = 22
 blendPath = '/home/craigb/Downloads/'
 blendFileName = 'cards-cycles.blend'

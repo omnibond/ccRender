@@ -153,35 +153,34 @@ class ccModalTimerOperator(bpy.types.Operator):
         # if anything goes wrong return False
 
         ccSchCheck = urlparse(ccSchedulerURI)
-        ccURegex = re.match(r"^[a-z_][a-z0-9_-]*[$]?$", ccUsername)
-        ccPRegex = re.match(r"^[A-Za-z0-9_]+$", ccPassword)
+        ccURegex = re.fullmatch(r"^[a-z_][a-z0-9_-]*[$]?$", ccUsername)
+        ccPRegex = re.fullmatch(r"^[A-Za-z0-9_]+$", ccPassword)
 
         if ccSchCheck.path == '':
             ccvalidateMsg = "Invalid URL, it needs an IPv4 or Domain Name"
-            print("Error: "+ccvalidateMsg)
+            print("Error: " + ccvalidateMsg)
             return ccvalidateMsg
-
 
         # Username follows basic gnu/linux name rules
-        if len(ccUsername) > 32:
-            ccvalidateMsg = "Username is too long, it must be less than 32 characteristics!"
-            print("Error: "+ccvalidateMsg)
-            return ccvalidateMsg
-
         if ccURegex is None:
             ccvalidateMsg = "Invalid Username. Username must be in letters, numbers, '_', '-', or '$'!"
-            print("Error: "+ccvalidateMsg)
+            print("Error: " + ccvalidateMsg)
+            return ccvalidateMsg
+
+        if len(ccUsername) > 32:
+            ccvalidateMsg = "Username is too long, it must be less than 32 character!"
+            print("Error: " + ccvalidateMsg)
             return ccvalidateMsg
 
         # Password follows the same rules as username
-        if len(ccPassword) > 32:
-            ccvalidateMsg = "Your password is too long, it must be less than 32 characteristics!"
-            print("Error: "+ccvalidateMsg)
-            return ccvalidateMsg
-
         if ccPRegex is None:
             ccvalidateMsg = "Invalid Password! Password must be in letters, numbers, '_', '-', or '$'!"
-            print("Error: "+ccvalidateMsg)
+            print("Error: " + ccvalidateMsg)
+            return ccvalidateMsg
+
+        if len(ccPassword) > 32:
+            ccvalidateMsg = "Your password is too long, it must be less than 32 character!"
+            print("Error: " + ccvalidateMsg)
             return ccvalidateMsg
 
         # write valid inputs into the communicator

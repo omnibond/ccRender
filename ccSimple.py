@@ -6,6 +6,9 @@ import re
 from bpy.app.handlers import persistent
 from urllib.parse import urlparse
 
+import paramiko
+from scp import SCPClient
+
 bl_info = {
     "name": "CC Render",
     "author": "Omnibond",
@@ -128,7 +131,7 @@ class ccModalTimerOperator(bpy.types.Operator):
     anyKeyEventTypes = {'LEFTMOUSE', 'RIGHTMOUSE', 'ESC'}
 
     def isAnyKey(self, event):
-        return event.type in anyKeyEventTypes
+        return event.type in self.anyKeyEventTypes
 
     def modal(self, context, event):
         if self.isAnyKey(event) is True:

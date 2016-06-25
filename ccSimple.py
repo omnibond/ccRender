@@ -125,9 +125,13 @@ class ccModalTimerOperator(bpy.types.Operator):
     # Operator which runs its self from a ccModalTimerOperator
     bl_idname = "wm.ccmodal_timer_opt"
     bl_label = "ccModal Timer Operator"
+    anyKeyEventTypes = {'LEFTMOUSE', 'RIGHTMOUSE', 'ESC'}
+
+    def isAnyKey(self, event):
+        return event.type in anyKeyEventTypes
 
     def modal(self, context, event):
-        if event.type in {'LEFTMOUSE', 'RIGHTMOUSE', 'ESC'}:
+        if self.isAnyKey(event) is True:
             self.cancel(context)
             return {'FINISHED'}
 

@@ -128,7 +128,25 @@ class ccModalTimerOperator(bpy.types.Operator):
     # Operator which runs its self from a ccModalTimerOperator
     bl_idname = "wm.ccmodal_timer_opt"
     bl_label = "ccModal Timer Operator"
-    anyKeyEventTypes = {'LEFTMOUSE', 'RIGHTMOUSE', 'ESC'}
+    anyKeyEventTypes = {'LEFTMOUSE', 'RIGHTMOUSE', 'ESC', 'SPACE', 'OSKEY',
+                        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K',
+                        'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
+                        'W', 'X', 'Y', 'Z', 'ZERO', 'ONE', 'TWO', 'THREE',
+                        'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE',
+                        'LEFT_CTRL', 'LEFT_ALT', 'LEFT_SHIFT', 'RIGHT_ALT',
+                        'RIGHT_CTRL', 'RIGHT_SHIFT', 'GRLESS', 'TAB', 'RET',
+                        'LINE_FEED', 'BACK_SPACE', 'DEL', 'SEMI_COLON',
+                        'PERIOD', 'COMMA', 'QUOTE', 'ACCENT_GRAVE', 'MINUS',
+                        'SLASH', 'BACK_SLASH', 'EQUAL', 'LEFT_BRACKET',
+                        'RIGHT_BRACKET', 'LEFT_ARROW', 'DOWN_ARROW',
+                        'RIGHT_ARROW', 'UP_ARROW', 'NUMPAD_2', 'NUMPAD_4',
+                        'NUMPAD_6', 'NUMPAD_8', 'NUMPAD_1', 'NUMPAD_3',
+                        'NUMPAD_5', 'NUMPAD_7', 'NUMPAD_9', 'NUMPAD_PERIOD',
+                        'NUMPAD_SLASH', 'NUMPAD_ASTERIX', 'NUMPAD_0',
+                        'NUMPAD_MINUS', 'NUMPAD_ENTER', 'NUMPAD_PLUS', 'F1',
+                        'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10',
+                        'F11', 'F12', 'PAUSE', 'INSERT', 'HOME', 'PAGE_UP',
+                        'PAGE_DOWN', 'END'}
 
     def isAnyKey(self, event):
         return event.type in self.anyKeyEventTypes
@@ -171,23 +189,27 @@ class ccModalTimerOperator(bpy.types.Operator):
 
         # Username follows basic gnu/linux name rules
         if ccURegex is None:
-            ccvalidateMsg = "Invalid Username. Username must be in letters, numbers, '_', '-', or '$'!"
+            ccvalidateMsg = ("Invalid Username. Username must be in letters, "
+                             "numbers, '_', '-', or '$'!")
             print("Error: " + ccvalidateMsg)
             return ccvalidateMsg
 
         if len(ccUsername) > 32:
-            ccvalidateMsg = "Username is too long, it must be less than 32 character!"
+            ccvalidateMsg = ("Username is too long, "
+                             "it must be less than 32 characters!")
             print("Error: " + ccvalidateMsg)
             return ccvalidateMsg
 
         # Password follows the same rules as username
         if ccPRegex is None:
-            ccvalidateMsg = "Invalid Password! Password must be in letters, numbers, '_', '-', or '$'!"
+            ccvalidateMsg = ("Invalid Password! Password must be in letters, "
+                             "numbers, '_', '-', or '$'!")
             print("Error: " + ccvalidateMsg)
             return ccvalidateMsg
 
         if len(ccPassword) > 32:
-            ccvalidateMsg = "Your password is too long, it must be less than 32 character!"
+            ccvalidateMsg = ("Your password is too long, "
+                             "it must be less than 32 character!")
             print("Error: " + ccvalidateMsg)
             return ccvalidateMsg
 

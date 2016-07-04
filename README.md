@@ -6,6 +6,6 @@ Paramiko has to be included into blender's python environment.  To get this to w
 
 ```bash
 mkdir /usr/share/blender/scripts/modules/pipmodules
-pip install --target=/usr/share/blender/scripts/modules/pipmodules
+pip install paramiko --target=/usr/share/blender/scripts/modules/pipmodules
 ```
 and then restart blender.

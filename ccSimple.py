@@ -117,7 +117,6 @@ class Communicator():
         self._scpClient = value
 
     def render(self):
-        self.progressText = "Connecting to scheduler..."
         result = self.connect()
         if(result is False):
             self.finished = True
@@ -134,14 +133,17 @@ class Communicator():
         self.finished = True
 
     def connect(self):
-
         self.sshClient.load_system_host_keys()
         self.sshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
         try:
+            self.progressText = "Connecting to scheduler..."
+
             self.sshClient.connect(self.schedulerURI, 22, self.username, self.password)
+            self.progressText = "ssh connection established."
 
             self.scpClient = SCPClient(self.sshClient.get_transport())
+            self.progressText = "scp connection established."
 
         except BadHostKeyException as err:
             self.progressText = "SSH Connection failed: Bad host key."

@@ -31,6 +31,8 @@ class Communicator():
         self._progressText = "initializing..."
         self._progress = True
         self._finished = False
+        self._sshClient = paramiko.SSHClient()
+        self._scpClient = None
 
     @property
     def schedulerURI(self):
@@ -98,10 +100,27 @@ class Communicator():
     def finished(self, value):
         self._finished = value
 
+    @property
+    def sshClient(self):
+        return self._sshClient
+
+    @sshClient.setter
+    def sshClient(self, value):
+        self._sshClient = value
+
+    @property
+    def scpClient(self):
+        return self._scpClient
+
+    @scpClient.setter
+    def scpClient(self, value):
+        self._scpClient = value
+
     def render(self):
         self.progressText = "Connecting to scheduler..."
         result = self.connect()
         if(result is False):
+            self.finished = True
             return False
 
         self.progressText = "done."
@@ -109,17 +128,44 @@ class Communicator():
         self.progressText = "scp'ing blend file..."
         result = self.sendBlend()
         if(result is False):
+            self.finished = True
             return False
         self.progressText = "done."
         self.finished = True
 
     def connect(self):
-        time.sleep(2)
+
+        self.sshClient.load_system_host_keys()
+        self.sshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+        try:
+            self.sshClient.connect(self.schedulerURI, 22, self.username, self.password)
+
+            self.scpClient = SCPClient(self.sshClient.get_transport())
+
+        except BadHostKeyException as err:
+            self.progressText = "SSH Connection failed: Bad host key."
+            return False
+        except AuthenticationException as err:
+            self.progressText = "SSH Connection failed: Authentication Error."
+            return False
+        except SSHException as err:
+            self.progressText = "SSH Connection failed: " + err
+            return False
+        except socket.error as err:
+            self.progressText = "SSH Connection failed: " + err
+            return False
+
         return True
 
     def sendBlend(self):
         time.sleep(2)
         return True
+
+    def disconnect(self):
+        if self.sshClient is not None:
+            self.sshClient.close()
+            self.sshClient = None
 
 communicator = Communicator()
 

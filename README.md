@@ -4,8 +4,15 @@ An addon for blender that renders the current .blend file in the cloud.  This us
 ## Paramiko requirements
 Paramiko has to be included into blender's python environment.  To get this to work in Ubuntu I've had to use pip to install paramiko and it's dependencies into a local target using the target command:
 
-```bash
-mkdir /usr/share/blender/scripts/modules/pipmodules
-pip install paramiko --target=/usr/share/blender/scripts/modules/pipmodules
 ```
-and then restart blender.
+mkdir /home/user/blenderscripts
+mkdir /home/user/blenderscripts/addons
+mkdir /home/user/blenderscripts/modules
+mkdir /home/user/blenderscripts/startup
+pip install --target=/home/craigb/blenderscripts/modules/ git+https://github.com/jbardin/scp.py
+```
+and then set the value in preferences -> file -> scripts to 
+```
+/home/user/blenderscripts
+```
+and restart blender.

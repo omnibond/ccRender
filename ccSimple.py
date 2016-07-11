@@ -133,7 +133,7 @@ class Communicator():
         self.finished = True
 
     def connect(self):
-        self.sshClient.load_system_host_keys()
+        # self.sshClient.load_system_host_keys()
         self.sshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
         try:

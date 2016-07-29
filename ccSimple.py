@@ -133,32 +133,37 @@ class Communicator():
         self.finished = True
 
     def connect(self):
-        # self.sshClient.load_system_host_keys()
+        self.sshClient.load_system_host_keys()
         self.sshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-        try:
-            self.progressText = "Connecting to scheduler..."
+        self.progressText = "Connecting to scheduler..."
 
-            self.sshClient.connect(self.schedulerURI, 22, self.username, self.password)
-            self.progressText = "ssh connection established."
+        self.sshClient.connect(self.schedulerURI, 22, self.username, self.password)
+        self.progressText = "ssh connection established."
 
-            self.scpClient = SCPClient(self.sshClient.get_transport())
-            self.progressText = "scp connection established."
+        # try:
+        #    self.progressText = "Connecting to scheduler..."
 
-        except BadHostKeyException as err:
-            self.progressText = "SSH Connection failed: Bad host key."
-            return False
-        except AuthenticationException as err:
-            self.progressText = "SSH Connection failed: Authentication Error."
-            return False
-        except SSHException as err:
-            self.progressText = "SSH Connection failed: " + err
-            return False
-        except socket.error as err:
-            self.progressText = "SSH Connection failed: " + err
-            return False
+        #    self.sshClient.connect(self.schedulerURI, 22, self.username, self.password)
+        #    self.progressText = "ssh connection established."
 
-        return True
+        #    self.scpClient = SCPClient(self.sshClient.get_transport())
+        #    self.progressText = "scp connection established."
+
+        # except BadHostKeyException as err:
+        #    self.progressText = "SSH Connection failed: Bad host key."
+        #    return False
+        # except AuthenticationException as err:
+        #    self.progressText = "SSH Connection failed: Authentication Error."
+        #    return False
+        # except SSHException as err:
+        #    self.progressText = "SSH Connection failed: " + err
+        #    return False
+        # except socket.error as err:
+        #    self.progressText = "SSH Connection failed: " + err
+        #    return False
+
+        # return True
 
     def sendBlend(self):
         time.sleep(2)
@@ -206,7 +211,7 @@ class ccModalTimerOperator(bpy.types.Operator):
 
         if communicator.finished is True:
             # finished ok.
-            print ("finished is true.")
+            print("finished is true.")
             self.cancel(context)
             return {'FINISHED'}
 
@@ -228,7 +233,7 @@ class ccModalTimerOperator(bpy.types.Operator):
 
         ccSchCheck = urlparse(ccSchedulerURI)
         ccURegex = re.fullmatch(r"^[a-z_][a-z0-9_-]*[$]?$", ccUsername)
-        ccPRegex = re.fullmatch(r"^[A-Za-z0-9_]+$", ccPassword)
+        ccPRegex = re.fullmatch(r"^[A-Za-z0-9_$-]+$", ccPassword)
 
         if ccSchCheck.path == '':
             ccvalidateMsg = "Invalid URL, it needs an IPv4 or Domain Name"

@@ -3,6 +3,7 @@ import time
 import threading
 import random
 import re
+import socket
 from bpy.app.handlers import persistent
 from urllib.parse import urlparse
 
@@ -136,10 +137,26 @@ class Communicator():
         self.sshClient.load_system_host_keys()
         self.sshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-        self.progressText = "Connecting to scheduler..."
+        try:
+            self.progressText = "Connecting to scheduler..."
 
-        self.sshClient.connect(self.schedulerURI, 22, self.username, self.password)
-        self.progressText = "ssh connection established."
+            self.sshClient.connect(self.schedulerURI, 22, self.username, self.password)
+            self.progressText = "ssh connection established."
+
+        except paramiko.BadHostKeyException as err:
+            self.progressText = "SSH Connection failed: Bad Host Key."
+            return False
+        except paramiko.AuthenticationException as err:
+            self.progressText = "SSH Connection failed: Authentication Error"
+            return False
+        except paramiko.SSHException as err:
+            self.progressText = "SSH Connection failed: " + err
+            return False
+        except socket.error as err:
+            self.progressText = "SSH Connection failed: " + err
+            return False
+
+        return True
 
         # try:
         #    self.progressText = "Connecting to scheduler..."

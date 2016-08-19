@@ -1,4 +1,5 @@
 import bpy
+import os
 import time
 import threading
 import random
@@ -29,6 +30,9 @@ class Communicator():
         self._password = None
         self._numNodes = 0
         self._blendPath = None
+        self._blendName = None
+        self._destPath = None
+        self._destName = None
         self._progressText = "initializing..."
         self._progress = True
         self._finished = False
@@ -74,6 +78,30 @@ class Communicator():
     @blendPath.setter
     def blendPath(self, value):
         self._blendPath = value
+
+    @property
+    def blendName(self):
+        return self._blendName
+
+    @blendName.setter
+    def blendName(self, value):
+        self._blendName = value
+
+    @property
+    def destPath(self):
+        return self._destPath
+
+    @destPath.setter
+    def destPath(self, value):
+        self._destPath = value
+
+    @property
+    def destName(self):
+        return self._destName
+
+    @destName.setter
+    def destName(self, value):
+        self._destName = value
 
     @property
     def progressText(self):
@@ -140,7 +168,9 @@ class Communicator():
         try:
             self.progressText = "Connecting to scheduler..."
 
-            self.sshClient.connect(self.schedulerURI, 22, self.username, self.password)
+            self.sshClient.connect(
+                self.schedulerURI, 22, self.username, self.password
+            )
             self.progressText = "ssh connection established."
 
         except paramiko.BadHostKeyException as err:
@@ -184,6 +214,33 @@ class Communicator():
 
     def sendBlend(self):
         time.sleep(2)
+        self.blendPath = os.path.dirname(bpy.data.filepath)
+        self.blendName = bpy.path.basename(bpy.data.filepath)
+        self.destPath = '/home/' + self.username + '/'
+        self.destName = bpy.path.display_name_from_filepath(bpy.data.filepath)
+
+        if not self.blendPath:
+            print("Error: Save file first")
+            self.progressText = "Error: Save file first!"
+            return False
+        self.progressText = 'trying to mkdir ' + self.destPath + self.destName
+        self.sshClient.exec_command('mkdir ' + self.destPath + self.destName)
+
+        # Makes a frames folder
+        # self.progressText = (
+        #     'trying to mkdir ' + self.destPath + self.destName + '/frames'
+        # )
+
+        # self.sshClient.exec_command(
+        #     'mkdir ' + self.destPath + self.destName + '/frames'
+        # )
+
+        time.sleep(4)
+        self.scpClient = SCPClient(self.sshClient.get_transport())
+        self.progressText = (
+            'copying blend file to ' + self.destPath + self.destName + '/' + self.blendName)
+        self.scpClient.put(
+            bpy.data.filepath, self.destPath + self.destName + '/' + self.blendName)
         return True
 
     def disconnect(self):

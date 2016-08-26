@@ -5,8 +5,10 @@ import threading
 import random
 import re
 import socket
+
 from bpy.app.handlers import persistent
 from urllib.parse import urlparse
+from bpy.props import EnumProperty
 
 import paramiko
 from scp import SCPClient
@@ -227,13 +229,15 @@ class Communicator():
         self.sshClient.exec_command('mkdir ' + self.destPath + self.destName)
 
         # Makes a frames folder
-        # self.progressText = (
-        #     'trying to mkdir ' + self.destPath + self.destName + '/frames'
-        # )
+        self.progressText = (
+            'trying to mkdir ' + self.destPath + self.destName + '/frames'
+        )
 
-        # self.sshClient.exec_command(
-        #     'mkdir ' + self.destPath + self.destName + '/frames'
-        # )
+        self.sshClient.exec_command(
+            'mkdir ' + self.destPath + self.destName + '/frames'
+        )
+
+        self.rendDest = self.destPath + self.destName + '/frames'
 
         time.sleep(4)
         self.scpClient = SCPClient(self.sshClient.get_transport())
@@ -441,6 +445,10 @@ def render():
 
     rdr = KickoffRender(communicator=communicator)
     rdr.start()
+
+    # bpy.context.scene.render.filepath = communicator.rendDest
+    # bpy.data.scenes.render.engine = 'CYCLES'
+    # bpy.ops.render.render(animation=True, use_viewport=True, write_still=True)
 
     # non-threaded version
     # this hangs while it completed

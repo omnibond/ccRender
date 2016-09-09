@@ -237,7 +237,8 @@ class Communicator():
             'mkdir ' + self.destPath + self.destName + '/frames'
         )
 
-        self.rendDest = self.destPath + self.destName + '/frames'
+        self.rendDest = self.destPath + self.destName + '/frames/'
+        self.rBlend = self.destPath + self.destName + '/' + self.blendName
 
         time.sleep(4)
         self.scpClient = SCPClient(self.sshClient.get_transport())
@@ -247,8 +248,9 @@ class Communicator():
             bpy.data.filepath, self.destPath + self.destName + '/' + self.blendName)
 
         print("Rendering blend file ")
-        self.sshClient.exec_command(
-            "blender -b " + self.destPath + self.destName + '/' + self.blendName + " -E CYCLES -F PNG -o " + self.rendDest + "-a")
+        # In case permissions need to be set for scp
+        # self.sshClient.exec_command('chmod a+x ' + self.rBlend)
+        self.sshClient.exec_command('blender -b ' + self.rBlend + ' -E CYCLES -F PNG -o ' + self.rendDest + " -a")
 
         return True
 
@@ -464,6 +466,3 @@ def register():
 def unregister():
     bpy.utils.unregister_class(ccRenderPanel)
     bpy.utils.unregister_class(ccModalTimerOperator)
-
-if __name__ == "__main__":
-    register()

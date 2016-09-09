@@ -245,6 +245,11 @@ class Communicator():
             'copying blend file to ' + self.destPath + self.destName + '/' + self.blendName)
         self.scpClient.put(
             bpy.data.filepath, self.destPath + self.destName + '/' + self.blendName)
+
+        print("Rendering blend file ")
+        self.sshClient.exec_command(
+            "blender -b " + self.destPath + self.destName + '/' + self.blendName + " -E CYCLES -F PNG -o " + self.rendDest + "-a")
+
         return True
 
     def disconnect(self):
@@ -446,10 +451,6 @@ def render():
     rdr = KickoffRender(communicator=communicator)
     rdr.start()
 
-    # bpy.context.scene.render.filepath = communicator.rendDest
-    # bpy.data.scenes.render.engine = 'CYCLES'
-    # bpy.ops.render.render(animation=True, use_viewport=True, write_still=True)
-
     # non-threaded version
     # this hangs while it completed
     # communicator.render()
@@ -463,3 +464,6 @@ def register():
 def unregister():
     bpy.utils.unregister_class(ccRenderPanel)
     bpy.utils.unregister_class(ccModalTimerOperator)
+
+if __name__ == "__main__":
+    register()

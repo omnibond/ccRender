@@ -16,7 +16,7 @@ from scp import SCPClient
 bl_info = {
     "name": "CC Render",
     "author": "Omnibond",
-    "version": (0, 4),
+    "version": (0, 5),
     "blender": (2, 77, 0),
     "location": "View3D > Tools > ccSimple_Render",
     "description": "Cloudy Cluster Simple Render (alpha stage)",
@@ -35,6 +35,7 @@ class Communicator():
         self._blendName = None
         self._destPath = None
         self._destName = None
+        self._overwrite = False
         self._progressText = "initializing..."
         self._progress = True
         self._finished = False
@@ -104,6 +105,14 @@ class Communicator():
     @destName.setter
     def destName(self, value):
         self._destName = value
+
+    @property
+    def overwrite(self):
+        return self._overwrite
+
+    @overwrite.setter
+    def overwrite(self, value):
+        self._overwrite = value
 
     @property
     def progressText(self):
@@ -215,6 +224,7 @@ class Communicator():
         # return True
 
     def sendBlend(self):
+
         time.sleep(2)
         self.blendPath = os.path.dirname(bpy.data.filepath)
         self.blendName = bpy.path.basename(bpy.data.filepath)
@@ -225,6 +235,18 @@ class Communicator():
             print("Error: Save file first")
             self.progressText = "Error: Save file first!"
             return False
+
+        # Sets Overwrite based on checkbox in ccRenderPandel
+        # May tweak it so it links to Overwrite checkbox in Render Panel
+        if self.overwrite is False:
+            self.progressText = "Disabling Overwrite..."
+            bpy.context.scene.render.use_overwrite = False
+            bpy.ops.wm.save_mainfile()
+        else:
+            self.progressText = "Enabling Overwrite..."
+            bpy.context.scene.render.use_overwrite = True
+            bpy.ops.wm.save_mainfile()
+
         self.progressText = 'trying to mkdir ' + self.destPath + self.destName
         self.sshClient.exec_command('mkdir ' + self.destPath + self.destName)
 
@@ -247,10 +269,13 @@ class Communicator():
         self.scpClient.put(
             bpy.data.filepath, self.destPath + self.destName + '/' + self.blendName)
 
-        print("Rendering blend file ")
+        # print("Rendering blend file ")
         # In case permissions need to be set for scp
         # self.sshClient.exec_command('chmod a+x ' + self.rBlend)
-        self.sshClient.exec_command('blender -b ' + self.rBlend + ' -E CYCLES -F PNG -o ' + self.rendDest + " -a")
+        self.progressText = "Rendering blend file...."
+        self.sshClient.exec_command(
+            'blender -b ' + self.rBlend + ' -E CYCLES -F PNG -o ' + self.rendDest + " -t 0 -a"
+        )
 
         return True
 
@@ -312,6 +337,7 @@ class ccModalTimerOperator(bpy.types.Operator):
         ccUsername = context.scene.ccUsername
         ccPassword = context.scene.ccPassword
         ccNumNodes = context.scene.ccNumNodes
+        ccOverwrite = context.scene.ccOverwrite
 
         # TODO: valudate the variables here
         # if anything goes wrong return False
@@ -356,6 +382,9 @@ class ccModalTimerOperator(bpy.types.Operator):
         communicator.username = ccUsername
         communicator.password = ccPassword
         communicator.numNodes = ccNumNodes
+
+        # write overwrite checkbox into the communicator
+        communicator.overwrite = ccOverwrite
 
         return True
 
@@ -408,6 +437,10 @@ class ccRenderPanel(bpy.types.Panel):
         max=1000,
         step=1
     )
+    bpy.types.Scene.ccOverwrite = bpy.props.BoolProperty(
+        name="Overwrite Frames",
+        default=False
+    )
 
     def check(self, context):
         return communicator.progress
@@ -425,6 +458,8 @@ class ccRenderPanel(bpy.types.Panel):
         row.prop(context.scene, "ccPassword")
         row = col.row()
         row.prop(context.scene, "ccNumNodes")
+        row = col.row()
+        row.prop(context.scene, "ccOverwrite")
 
         col = layout.column()
         row = col.row()

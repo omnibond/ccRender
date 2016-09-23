@@ -35,9 +35,9 @@ class Communicator():
         self._blendName = None
         self._destPath = None
         self._destName = None
-        self._overwrite = False
         self._progressText = "initializing..."
         self._progress = True
+        # self._cEndFrame = False
         self._finished = False
         self._sshClient = paramiko.SSHClient()
         self._scpClient = None
@@ -107,14 +107,6 @@ class Communicator():
         self._destName = value
 
     @property
-    def overwrite(self):
-        return self._overwrite
-
-    @overwrite.setter
-    def overwrite(self, value):
-        self._overwrite = value
-
-    @property
     def progressText(self):
         return self._progressText
 
@@ -131,6 +123,14 @@ class Communicator():
     @progress.setter
     def progress(self, value):
         self._progress = value
+
+    # @property
+    # def cEndFrame(self):
+        # return self._cEndFrame
+
+    # @cEndFrame.setter
+    # def cEndFrame(self, value):
+        # self._cEndFrame = value
 
     @property
     def finished(self):
@@ -199,30 +199,6 @@ class Communicator():
 
         return True
 
-        # try:
-        #    self.progressText = "Connecting to scheduler..."
-
-        #    self.sshClient.connect(self.schedulerURI, 22, self.username, self.password)
-        #    self.progressText = "ssh connection established."
-
-        #    self.scpClient = SCPClient(self.sshClient.get_transport())
-        #    self.progressText = "scp connection established."
-
-        # except BadHostKeyException as err:
-        #    self.progressText = "SSH Connection failed: Bad host key."
-        #    return False
-        # except AuthenticationException as err:
-        #    self.progressText = "SSH Connection failed: Authentication Error."
-        #    return False
-        # except SSHException as err:
-        #    self.progressText = "SSH Connection failed: " + err
-        #    return False
-        # except socket.error as err:
-        #    self.progressText = "SSH Connection failed: " + err
-        #    return False
-
-        # return True
-
     def sendBlend(self):
 
         time.sleep(2)
@@ -230,22 +206,17 @@ class Communicator():
         self.blendName = bpy.path.basename(bpy.data.filepath)
         self.destPath = '/home/' + self.username + '/'
         self.destName = bpy.path.display_name_from_filepath(bpy.data.filepath)
+        self.finalFrame = bpy.context.scene.frame_end
+        # self.ffImg = 'frame_' + self.finalFrame + '.png'
 
         if not self.blendPath:
             print("Error: Save file first")
             self.progressText = "Error: Save file first!"
             return False
 
-        # Sets Overwrite based on checkbox in ccRenderPandel
-        # May tweak it so it links to Overwrite checkbox in Render Panel
-        if self.overwrite is False:
-            self.progressText = "Disabling Overwrite..."
-            bpy.context.scene.render.use_overwrite = False
-            bpy.ops.wm.save_mainfile()
-        else:
-            self.progressText = "Enabling Overwrite..."
-            bpy.context.scene.render.use_overwrite = True
-            bpy.ops.wm.save_mainfile()
+        # Changes overwrite to false and saves blend file before sending.
+        bpy.context.scene.render.use_overwrite = False
+        bpy.ops.wm.save_mainfile()
 
         self.progressText = 'trying to mkdir ' + self.destPath + self.destName
         self.sshClient.exec_command('mkdir ' + self.destPath + self.destName)
@@ -274,7 +245,7 @@ class Communicator():
         # self.sshClient.exec_command('chmod a+x ' + self.rBlend)
         self.progressText = "Rendering blend file...."
         self.sshClient.exec_command(
-            'blender -b ' + self.rBlend + ' -E CYCLES -F PNG -o ' + self.rendDest + " -t 0 -a"
+            'blender -b ' + self.rBlend + ' -o ' + self.rendDest + "frame_#### -E CYCLES -F PNG -a"
         )
 
         return True
@@ -383,9 +354,6 @@ class ccModalTimerOperator(bpy.types.Operator):
         communicator.password = ccPassword
         communicator.numNodes = ccNumNodes
 
-        # write overwrite checkbox into the communicator
-        communicator.overwrite = ccOverwrite
-
         return True
 
     def execute(self, context):
@@ -437,10 +405,6 @@ class ccRenderPanel(bpy.types.Panel):
         max=1000,
         step=1
     )
-    bpy.types.Scene.ccOverwrite = bpy.props.BoolProperty(
-        name="Overwrite Frames",
-        default=False
-    )
 
     def check(self, context):
         return communicator.progress
@@ -459,7 +423,6 @@ class ccRenderPanel(bpy.types.Panel):
         row = col.row()
         row.prop(context.scene, "ccNumNodes")
         row = col.row()
-        row.prop(context.scene, "ccOverwrite")
 
         col = layout.column()
         row = col.row()

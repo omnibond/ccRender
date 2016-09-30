@@ -37,10 +37,11 @@ class Communicator():
         self._destName = None
         self._progressText = "initializing..."
         self._progress = True
-        # self._cEndFrame = False
+        self._fEndImg = None
         self._finished = False
         self._sshClient = paramiko.SSHClient()
         self._scpClient = None
+        self._sftpClient = None
 
     @property
     def schedulerURI(self):
@@ -124,13 +125,13 @@ class Communicator():
     def progress(self, value):
         self._progress = value
 
-    # @property
-    # def cEndFrame(self):
-        # return self._cEndFrame
+    @property
+    def fEndImg(self):
+        return self._fEndImg
 
-    # @cEndFrame.setter
-    # def cEndFrame(self, value):
-        # self._cEndFrame = value
+    @fEndImg.setter
+    def fEndImg(self, value):
+        self._fEndImg = value
 
     @property
     def finished(self):
@@ -155,6 +156,14 @@ class Communicator():
     @scpClient.setter
     def scpClient(self, value):
         self._scpClient = value
+
+    @property
+    def sftpClient(self):
+        return self._sftpClient
+
+    @sftpClient.setter
+    def sftpClient(self, value):
+        self._sftpClient = value
 
     def render(self):
         result = self.connect()
@@ -206,8 +215,11 @@ class Communicator():
         self.blendName = bpy.path.basename(bpy.data.filepath)
         self.destPath = '/home/' + self.username + '/'
         self.destName = bpy.path.display_name_from_filepath(bpy.data.filepath)
-        self.finalFrame = bpy.context.scene.frame_end
-        # self.ffImg = 'frame_' + self.finalFrame + '.png'
+
+        frameend = bpy.context.scene.frame_end
+        # converts frameend to a string and
+        # assign it to vairable for sftp to check as the last frame.
+        self.fEndImg = 'frame_' + str(frameend) + '.png'
 
         if not self.blendPath:
             print("Error: Save file first")
@@ -245,8 +257,27 @@ class Communicator():
         # self.sshClient.exec_command('chmod a+x ' + self.rBlend)
         self.progressText = "Rendering blend file...."
         self.sshClient.exec_command(
-            'blender -b ' + self.rBlend + ' -o ' + self.rendDest + "frame_#### -E CYCLES -F PNG -a"
+            'blender -b ' + self.rBlend + ' -o ' + self.rendDest + "frame_# -E CYCLES -F PNG -a"
         )
+
+        time.sleep(5)
+        self.sftpClient = self.sshClient.open_sftp()
+        self.sftpClient.chdir(self.rendDest)
+
+        # err = 0
+        # Not sure if the last comment is necessary or not
+
+        # Thoughts: wanted the loop to happen while there is no error
+        # and loop while there is an error (or while error code 2 (File not found))
+        while True:
+            try:
+                print(self.sftpClient.stat(self.rendDest + self.fEndImg))
+            except IOError as err:
+                time.sleep(3)
+            else:
+                print("Final Image Found!")
+                self.progressText = "Complete!"
+                break
 
         return True
 

@@ -256,9 +256,11 @@ class Communicator():
         # In case permissions need to be set for scp
         # self.sshClient.exec_command('chmod a+x ' + self.rBlend)
         self.progressText = "Rendering blend file...."
-        self.sshClient.exec_command(
+        stdin, stdout, stderr = self.sshClient.exec_command(
             'blender -b ' + self.rBlend + ' -o ' + self.rendDest + "frame_# -E CYCLES -F PNG -a"
         )
+
+        print(stdout.readlines())
 
         time.sleep(5)
         self.sftpClient = self.sshClient.open_sftp()
@@ -339,7 +341,6 @@ class ccModalTimerOperator(bpy.types.Operator):
         ccUsername = context.scene.ccUsername
         ccPassword = context.scene.ccPassword
         ccNumNodes = context.scene.ccNumNodes
-        ccOverwrite = context.scene.ccOverwrite
 
         # TODO: valudate the variables here
         # if anything goes wrong return False

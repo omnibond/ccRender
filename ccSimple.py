@@ -6,9 +6,7 @@ import random
 import re
 import socket
 
-from bpy.app.handlers import persistent
 from urllib.parse import urlparse
-from bpy.props import EnumProperty
 
 import paramiko
 from scp import SCPClient
@@ -16,7 +14,7 @@ from scp import SCPClient
 bl_info = {
     "name": "CC Render",
     "author": "Omnibond",
-    "version": (0, 5),
+    "version": (0, 6),
     "blender": (2, 77, 0),
     "location": "View3D > Tools > ccSimple_Render",
     "description": "Cloudy Cluster Simple Render (alpha stage)",
@@ -186,24 +184,24 @@ class Communicator():
         self.sshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
         try:
-            self.progressText = "Connecting to scheduler..."
+            self.progressText = 'Connecting to scheduler...'
 
             self.sshClient.connect(
                 self.schedulerURI, 22, self.username, self.password
             )
-            self.progressText = "ssh connection established."
+            self.progressText = 'ssh connection established.'
 
         except paramiko.BadHostKeyException as err:
-            self.progressText = "SSH Connection failed: Bad Host Key."
+            self.progressText = 'SSH Connection failed: Bad Host Key.'
             return False
         except paramiko.AuthenticationException as err:
-            self.progressText = "SSH Connection failed: Authentication Error"
+            self.progressText = 'SSH Connection failed: Authentication Error'
             return False
         except paramiko.SSHException as err:
-            self.progressText = "SSH Connection failed: " + err
+            self.progressText = 'SSH Connection failed: ' + err
             return False
         except socket.error as err:
-            self.progressText = "SSH Connection failed: " + err
+            self.progressText = 'SSH Connection failed: ' + err
             return False
 
         return True
@@ -223,7 +221,7 @@ class Communicator():
 
         if not self.blendPath:
             print("Error: Save file first")
-            self.progressText = "Error: Save file first!"
+            self.progressText = 'Error: Save file first!'
             return False
 
         # Changes overwrite to false and saves blend file before sending.
@@ -248,38 +246,20 @@ class Communicator():
         time.sleep(4)
         self.scpClient = SCPClient(self.sshClient.get_transport())
         self.progressText = (
-            'copying blend file to ' + self.destPath + self.destName + '/' + self.blendName)
+            'copying blend file to ' + self.destPath + self.destName + '/' + self.blendName
+        )
         self.scpClient.put(
-            bpy.data.filepath, self.destPath + self.destName + '/' + self.blendName)
-
-        # print("Rendering blend file ")
-        # In case permissions need to be set for scp
-        # self.sshClient.exec_command('chmod a+x ' + self.rBlend)
-        self.progressText = "Rendering blend file...."
-        stdin, stdout, stderr = self.sshClient.exec_command(
-            'blender -b ' + self.rBlend + ' -o ' + self.rendDest + "frame_# -E CYCLES -F PNG -a"
+            bpy.data.filepath, self.destPath + self.destName + '/' + self.blendName
         )
 
-        print(stdout.readlines())
-
-        time.sleep(5)
-        self.sftpClient = self.sshClient.open_sftp()
-        self.sftpClient.chdir(self.rendDest)
-
-        # err = 0
-        # Not sure if the last comment is necessary or not
-
-        # Thoughts: wanted the loop to happen while there is no error
-        # and loop while there is an error (or while error code 2 (File not found))
-        while True:
-            try:
-                print(self.sftpClient.stat(self.rendDest + self.fEndImg))
-            except IOError as err:
-                time.sleep(3)
-            else:
-                print("Final Image Found!")
-                self.progressText = "Complete!"
-                break
+        # In case permissions need to be set for scp
+        # self.sshClient.exec_command('chmod a+x ' + self.rBlend)
+        self.progressText = 'Rendering blend file....'
+        self.sshClient.exec_command(
+            'blender -b ' + self.rBlend + ' -o ' + self.rendDest + "frame_#"
+            " -E CYCLES -F PNG -a > blendOutput.txt && echo '+' >> "
+            "blendDone.txt"
+        )
 
         return True
 
@@ -287,6 +267,7 @@ class Communicator():
         if self.sshClient is not None:
             self.sshClient.close()
             self.sshClient = None
+
 
 communicator = Communicator()
 

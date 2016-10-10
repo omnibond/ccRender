@@ -36,10 +36,10 @@ class Communicator():
         self._progressText = "initializing..."
         self._progress = True
         self._fEndImg = None
+        self._frameEnd = None
         self._finished = False
         self._sshClient = paramiko.SSHClient()
         self._scpClient = None
-        self._sftpClient = None
 
     @property
     def schedulerURI(self):
@@ -132,6 +132,14 @@ class Communicator():
         self._fEndImg = value
 
     @property
+    def frameEnd(self):
+        return self._frameEnd
+
+    @frameEnd.setter
+    def frameEnd(self, value):
+        self._frameEnd = value
+
+    @property
     def finished(self):
         return self._finished
 
@@ -155,14 +163,6 @@ class Communicator():
     def scpClient(self, value):
         self._scpClient = value
 
-    @property
-    def sftpClient(self):
-        return self._sftpClient
-
-    @sftpClient.setter
-    def sftpClient(self, value):
-        self._sftpClient = value
-
     def render(self):
         result = self.connect()
         if(result is False):
@@ -172,9 +172,21 @@ class Communicator():
         self.progressText = "done."
 
         self.progressText = "scp'ing blend file..."
+        prepResult = self.blendPrep()
+        if(prepResult is False):
+            self.finished = True
+            return False
+
         result = self.sendBlend()
         if(result is False):
             self.finished = True
+            return False
+        self.progressText = "done."
+
+        self.progressText = "Rendering blend file...."
+        rendResult = self.blendRender()
+        if(rendResult is False):
+            self.finish = True
             return False
         self.progressText = "done."
         self.finished = True
@@ -206,18 +218,21 @@ class Communicator():
 
         return True
 
-    def sendBlend(self):
-
-        time.sleep(2)
+    def blendPrep(self):
         self.blendPath = os.path.dirname(bpy.data.filepath)
         self.blendName = bpy.path.basename(bpy.data.filepath)
         self.destPath = '/home/' + self.username + '/'
         self.destName = bpy.path.display_name_from_filepath(bpy.data.filepath)
 
-        frameend = bpy.context.scene.frame_end
+        self.frameEnd = bpy.context.scene.frame_end
         # converts frameend to a string and
         # assign it to vairable for sftp to check as the last frame.
-        self.fEndImg = 'frame_' + str(frameend) + '.png'
+        self.fEndImg = 'frame_' + str(self.frameEnd) + '.png'
+
+        self.rendDest = self.destPath + self.destName + '/frames/'
+        self.rBlend = self.destPath + self.destName + '/' + self.blendName
+
+        time.sleep(2)
 
         if not self.blendPath:
             print("Error: Save file first")
@@ -228,6 +243,9 @@ class Communicator():
         bpy.context.scene.render.use_overwrite = False
         bpy.ops.wm.save_mainfile()
 
+        return True
+
+    def sendBlend(self):
         self.progressText = 'trying to mkdir ' + self.destPath + self.destName
         self.sshClient.exec_command('mkdir ' + self.destPath + self.destName)
 
@@ -240,10 +258,8 @@ class Communicator():
             'mkdir ' + self.destPath + self.destName + '/frames'
         )
 
-        self.rendDest = self.destPath + self.destName + '/frames/'
-        self.rBlend = self.destPath + self.destName + '/' + self.blendName
+        time.sleep(2)
 
-        time.sleep(4)
         self.scpClient = SCPClient(self.sshClient.get_transport())
         self.progressText = (
             'copying blend file to ' + self.destPath + self.destName + '/' + self.blendName
@@ -252,15 +268,14 @@ class Communicator():
             bpy.data.filepath, self.destPath + self.destName + '/' + self.blendName
         )
 
-        # In case permissions need to be set for scp
-        # self.sshClient.exec_command('chmod a+x ' + self.rBlend)
-        self.progressText = 'Rendering blend file....'
+        return True
+
+    def blendRender(self):
         self.sshClient.exec_command(
             'blender -b ' + self.rBlend + ' -o ' + self.rendDest + "frame_#"
             " -E CYCLES -F PNG -a > blendOutput.txt && echo '+' >> "
             "blendDone.txt"
         )
-
         return True
 
     def disconnect(self):
@@ -477,3 +492,7 @@ def register():
 def unregister():
     bpy.utils.unregister_class(ccRenderPanel)
     bpy.utils.unregister_class(ccModalTimerOperator)
+
+
+if __name__ == "__main__":
+    register()

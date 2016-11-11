@@ -14,7 +14,7 @@ from scp import SCPClient
 bl_info = {
     "name": "CC Render",
     "author": "Omnibond",
-    "version": (0, 6),
+    "version": (0, 6, 1),
     "blender": (2, 77, 0),
     "location": "View3D > Tools > ccSimple_Render",
     "description": "Cloudy Cluster Simple Render (alpha stage)",
@@ -35,8 +35,6 @@ class Communicator():
         self._destName = None
         self._progressText = "initializing..."
         self._progress = True
-        self._fEndImg = None
-        self._frameEnd = None
         self._finished = False
         self._sshClient = paramiko.SSHClient()
         self._scpClient = None
@@ -124,22 +122,6 @@ class Communicator():
         self._progress = value
 
     @property
-    def fEndImg(self):
-        return self._fEndImg
-
-    @fEndImg.setter
-    def fEndImg(self, value):
-        self._fEndImg = value
-
-    @property
-    def frameEnd(self):
-        return self._frameEnd
-
-    @frameEnd.setter
-    def frameEnd(self, value):
-        self._frameEnd = value
-
-    @property
     def finished(self):
         return self._finished
 
@@ -224,16 +206,14 @@ class Communicator():
         self.destPath = '/home/' + self.username + '/'
         self.destName = bpy.path.display_name_from_filepath(bpy.data.filepath)
 
-        self.frameEnd = bpy.context.scene.frame_end
-        # converts frameend to a string and
-        # assign it to vairable for sftp to check as the last frame.
-        self.fEndImg = 'frame_' + str(self.frameEnd) + '.png'
-
         self.rendDest = self.destPath + self.destName + '/frames/'
         self.rBlend = self.destPath + self.destName + '/' + self.blendName
 
         time.sleep(2)
 
+        # Checks the path of the blend file and tells the user to save
+        # the blend file first. This only happens when user is making from
+        # brand new blend file.
         if not self.blendPath:
             print("Error: Save file first")
             self.progressText = 'Error: Save file first!'

@@ -2,12 +2,12 @@ import io
 import os
 from setuptools import setup
 
-#Encoding specification for PY3
+# Encoding specification for PY3
 with io.open('README.md', encoding='utf-8') as fp:
     description = fp.read()
 
-#check and tweak version number
-#can change author and email if necessary
+# check and tweak version number
+# can change author and email if necessary
 setup(
     name = 'ccRender',
     version = '0.6.1.dev1',
@@ -19,7 +19,7 @@ setup(
     long_description = description,
     classifiers = [
         'Development Status :: 3 - Alpha',
-        'Progarming Language :: Python :: 3.5',
+        # 'Programming Language :: Python :: 3.5',
     ],
     install_requires = ['scp'],
 )

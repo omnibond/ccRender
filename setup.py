@@ -25,5 +25,6 @@ setup(
         # will double check to make sure user uses latest python 3 version
         # 'Programming Language :: Python :: 3.5',
     ],
+    py_modules=['ccSimple'],
     install_requires=['scp'],
 )

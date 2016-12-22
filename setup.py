@@ -9,17 +9,21 @@ with io.open('README.md', encoding='utf-8') as fp:
 # check and tweak version number
 # can change author and email if necessary
 setup(
-    name = 'ccRender',
-    version = '0.6.1.dev1',
-    author = 'Cliffton Hicks',
-    author_email = 'cliffton@omnibond.com',
-    license = 'LGPL',
-    url = 'https://github.com/omnibond/ccRender',
-    description = 'Cloud-based Blender rendering addon',
-    long_description = description,
-    classifiers = [
+    name='ccRender',
+    # version number (will change later)
+    version='0.6.1.dev1',
+    # used own name and email, will change later if necessary
+    author='Cliffton Hicks',
+    author_email='cliffton@omnibond.com',
+    license='LGPL',
+    url='https://github.com/omnibond/ccRender',
+    description='Cloud-based Blender rendering addon',
+    long_description=description,
+    classifiers=[
         'Development Status :: 3 - Alpha',
+        # Not sure if python programing language is necessary
+        # will double check to make sure user uses latest python 3 version
         # 'Programming Language :: Python :: 3.5',
     ],
-    install_requires = ['scp'],
+    install_requires=['scp'],
 )

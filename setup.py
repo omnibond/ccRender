@@ -1,6 +1,7 @@
 import io
 import os
 from setuptools import setup
+from setuptools import find_packages
 
 # Encoding specification for PY3
 with io.open('README.md', encoding='utf-8') as fp:
@@ -23,8 +24,11 @@ setup(
         'Development Status :: 3 - Alpha',
         # Not sure if python programing language is necessary
         # will double check to make sure user uses latest python 3 version
-        # 'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 3'
+        'Programming Language :: Python :: 3.5',
     ],
-    py_modules=['ccSimple'],
+    py_modules=['ccrender'],
+    packages=find_packages(exclude=['samples', 'tests'])
     install_requires=['scp'],
 )

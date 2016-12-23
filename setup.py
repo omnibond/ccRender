@@ -29,6 +29,6 @@ setup(
         'Programming Language :: Python :: 3.5',
     ],
     py_modules=['ccrender'],
-    packages=find_packages(exclude=['samples', 'tests'])
+    packages=find_packages(exclude=['samples', 'tests']),
     install_requires=['scp'],
 )

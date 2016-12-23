@@ -66,7 +66,8 @@ Then use the following commands:
     mkdir /home/user/blenderscripts/addons
     mkdir /home/user/blenderscripts/modules
     mkdir /home/user/blenderscripts/startup
-    pip3 install --target=/home/user/blenderscripts/modules/ ccRender
+    pip3 install --target=/home/user/blenderscripts/modules/ git+https://github.com/omnibond/ccRender
+
 
 and then set the value in preferences -> file -> scripts to
 
@@ -75,6 +76,7 @@ and then set the value in preferences -> file -> scripts to
     /home/user/blenderscripts
 
 and restart blender.
+
 
 
 Windows
@@ -91,7 +93,8 @@ Create blenderscripts folder preferably in the Documents folder and create the f
 Then pip install ccRender into the modules folder
 
 ::
-    pip install --target=C:\Users\username\Documents\blenderscripts\modules\ ccRender
+
+    pip install --target=C:\Users\username\Documents\blenderscripts\modules\ git+https://github.com/omnibond/ccRender
 
 and then set the value in preferences -> file -> scripts to
 

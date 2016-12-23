@@ -1,7 +1,7 @@
 import bpy
 import os
 import time
-import threading
+# import threading
 import random
 import re
 import socket
@@ -440,24 +440,24 @@ class ccRenderPanel(bpy.types.Panel):
         row.operator(operator="wm.ccmodal_timer_opt", text="Begin Render")
 
 
-class KickoffRender(threading.Thread):
-    def __init__(self, communicator, *args, **kwargs):
-        super(KickoffRender, self).__init__(*args, **kwargs)
-        self.communicator = communicator
+# class KickoffRender(threading.Thread):
+    # def __init__(self, communicator, *args, **kwargs):
+        # super(KickoffRender, self).__init__(*args, **kwargs)
+        # self.communicator = communicator
 
-    def run(self):
-        self.communicator.render()
+    # def run(self):
+        # self.communicator.render()
 
 
-def render():
+# def render():
     # communicator.blendPath = bpy.data.filepath
     # bpy.ops.file.pack_all()
 
     # this doesn't hang, and prints while it works
     # not sure how to report progress
 
-    rdr = KickoffRender(communicator=communicator)
-    rdr.start()
+    # rdr = KickoffRender(communicator=communicator)
+    # rdr.start()
 
     # non-threaded version
     # this hangs while it completed
@@ -472,3 +472,7 @@ def register():
 def unregister():
     bpy.utils.unregister_class(ccRenderPanel)
     bpy.utils.unregister_class(ccModalTimerOperator)
+
+
+if __name__ == "__main__":
+    register()

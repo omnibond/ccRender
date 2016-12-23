@@ -4,7 +4,7 @@ from setuptools import setup
 from setuptools import find_packages
 
 # Encoding specification for PY3
-with io.open('README.md', encoding='utf-8') as fp:
+with io.open('README.rst', encoding='utf-8') as fp:
     description = fp.read()
 
 # check and tweak version number
@@ -12,7 +12,7 @@ with io.open('README.md', encoding='utf-8') as fp:
 setup(
     name='ccRender',
     # version number (will change later)
-    version='0.6.1.dev1',
+    version='0.6.4.dev1',
     # used own name and email, will change later if necessary
     author='Cliffton Hicks',
     author_email='cliffton@omnibond.com',

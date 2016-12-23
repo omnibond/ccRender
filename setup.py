@@ -22,10 +22,10 @@ setup(
     long_description=description,
     classifiers=[
         'Development Status :: 3 - Alpha',
-        # Not sure if python programing language is necessary
-        # will double check to make sure user uses latest python 3 version
+        # Due to version of python Blender uses,
+        # only the current Python version is supported.
         'Programming Language :: Python',
-        'Programming Language :: Python :: 3'
+        'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
     ],
     py_modules=['ccrender'],

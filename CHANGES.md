@@ -5,4 +5,4 @@
 - Add changelog
 - Added threadding Lock
 - Tread lock should work against race conditions easily recgonized on VM
-- Removed __init__.py from tests folder
+- Removed __init__.py from tests folder and main directory

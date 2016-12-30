@@ -7,6 +7,7 @@ import re
 import socket
 
 from urllib.parse import urlparse
+from threading import Lock
 
 import paramiko
 from scp import SCPClient
@@ -14,7 +15,7 @@ from scp import SCPClient
 bl_info = {
     "name": "CC Render",
     "author": "Omnibond",
-    "version": (0, 6, 4),
+    "version": (0, 7, 0),
     "blender": (2, 77, 0),
     "location": "View3D > Tools > ccSimple_Render",
     "description": "Cloudy Cluster Simple Render (alpha stage)",
@@ -24,6 +25,7 @@ bl_info = {
 
 
 class Communicator():
+
     def __init__(self):
         self._schedulerURI = None
         self._username = None
@@ -441,12 +443,24 @@ class ccRenderPanel(bpy.types.Panel):
 
 
 class KickoffRender(threading.Thread):
+
     def __init__(self, communicator, *args, **kwargs):
         super(KickoffRender, self).__init__(*args, **kwargs)
         self.communicator = communicator
 
+        # Used Threadding Lock to see about fixing the race condition
+        # VMs are easily recongizeable.
+        self.ccLock = Lock()
+
     def run(self):
+        # Not sure if this is ideal fix for the threadding issue or not.
+        # Only cadavt is if the user attempts to render multiple jobs seconds
+        # from each other, Blender Terminal will display scp timeout message
+        # and would have to reload the blend file again for another attmept.
+
+        self.ccLock.acquire()
         self.communicator.render()
+        self.ccLock.release()
 
 
 def render():

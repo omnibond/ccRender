@@ -12,7 +12,7 @@ with io.open('README.rst', encoding='utf-8') as fp:
 setup(
     name='ccRender',
     # version number (will change later)
-    version='0.6.4.dev1',
+    version='0.7.0.dev1',
     # used own name and email, will change later if necessary
     author='Cliffton Hicks',
     author_email='cliffton@omnibond.com',

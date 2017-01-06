@@ -56,7 +56,7 @@ Ubuntu 14.04 & 16.04
 Install the following dependecies first.
 ::
 
-    sudo apt-get install build-essential libffi-dev libssl-dev zlib1g-dev
+    sudo apt-get install build-essential libffi-dev libssl-dev zlib1g-dev git-core
 
 
 Then use the following commands:
@@ -78,8 +78,20 @@ and then set the value in preferences -> file -> scripts to
 and restart blender.
 
 
+A additional folder, called ccrender will be installed to the same location as paramiko and can be moved to the addons folder. To install it into blender, install the python file in preferences -> addon -> install to file and find the addon in
+
+::
+
+    /home/user/blenderscripts/addons/ccrender/ccSimple.py
+
+enable the addon and save user settings.
+
+
 
 Windows
+
+Before installing the package from GitHub, git must be installed. You can download and install the latest version on from Git website under `Git for Windows
+<https://git-scm.com/download/win>`_.
 
 
 Create blenderscripts folder preferably in the Documents folder and create the following folders inside blenderscripts:
@@ -90,7 +102,7 @@ Create blenderscripts folder preferably in the Documents folder and create the f
     modules
     startup
 
-Then pip install ccRender into the modules folder
+Then open up command panel as Administrator and pip install ccRender into the modules folder
 
 ::
 
@@ -103,3 +115,12 @@ and then set the value in preferences -> file -> scripts to
     C:\Users\username\Documents\blenderscripts
 
 and restart blender.
+
+
+A additional folder, called ccrender will be installed to the same location as paramiko and can be moved to the addons folder. To install it into blender, install the python file in preferences -> addon -> install to file and find the addon in
+
+::
+
+    C:\Users\username\Documents\blenderscripts\addons\ccrender\ccSimple.py
+
+enable the addon and save user settings.

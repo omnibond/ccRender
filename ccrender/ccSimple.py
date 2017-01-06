@@ -2,7 +2,6 @@ import bpy
 import os
 import time
 import threading
-import random
 import re
 import socket
 
@@ -15,8 +14,8 @@ from scp import SCPClient
 bl_info = {
     "name": "CC Render",
     "author": "Omnibond",
-    "version": (0, 7, 0),
-    "blender": (2, 77, 0),
+    "version": (0, 7, 1),
+    "blender": (2, 78, 0),
     "location": "View3D > Tools > ccSimple_Render",
     "description": "Cloudy Cluster Simple Render (alpha stage)",
     "warning": "",
@@ -253,6 +252,10 @@ class Communicator():
         return True
 
     def blendRender(self):
+        # blendOutput.txt includes detail rendering process, while
+        # blendDone.txt outputs a symbol '+' to indicate the rendering job
+        # is done. Each additional '+' in the blendDone.txt is the number of
+        # jobs blender has done and completed.
         self.sshClient.exec_command(
             'blender -b ' + self.rBlend + ' -o ' + self.rendDest + "frame_#"
             " -E CYCLES -F PNG -a > blendOutput.txt && echo '+' >> "

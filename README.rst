@@ -68,8 +68,9 @@ Then use the following commands:
     mkdir /home/user/blenderscripts/startup
     pip3 install --target=/home/user/blenderscripts/modules/ git+https://github.com/omnibond/ccRender
 
+If you are using Ubuntu 14.04, the process is the same except use pip3.5 instead of pip3 to ensure that the pack is installing to the right python version.
 
-and then set the value in preferences -> file -> scripts to
+Then set the value in preferences -> file -> scripts to
 
 ::
 

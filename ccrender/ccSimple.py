@@ -15,7 +15,7 @@ from scp import SCPClient
 bl_info = {
     "name": "CC Render",
     "author": "Omnibond",
-    "version": (0, 8, 0),
+    "version": (0, 8, 1),
     "blender": (2, 78, 0),
     "location": "View3D > Tools > ccSimple_Render",
     "description": "Cloudy Cluster Simple Render (alpha stage)",
@@ -396,6 +396,7 @@ class Communicator():
             else:
                 # print("Rendering Complete!")
                 self.rProgress = True
+
         return True
 
     def disconnect(self):

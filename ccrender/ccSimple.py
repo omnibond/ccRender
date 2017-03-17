@@ -1,9 +1,10 @@
 import bpy
+import errno
 import os
-import time
-import threading
 import re
 import socket
+import time
+import threading
 
 from urllib.parse import urlparse
 from threading import Lock
@@ -14,7 +15,7 @@ from scp import SCPClient
 bl_info = {
     "name": "CC Render",
     "author": "Omnibond",
-    "version": (0, 7, 1),
+    "version": (0, 8, 0),
     "blender": (2, 78, 0),
     "location": "View3D > Tools > ccSimple_Render",
     "description": "Cloudy Cluster Simple Render (alpha stage)",
@@ -30,15 +31,25 @@ class Communicator():
         self._username = None
         self._password = None
         self._numNodes = 0
+        self._frameCnt = 0
+        self._frameTOT = 0
+        self._rDone = 0
+        self._ccFRMStart = None
+        self._ccFRMEnd = None
         self._blendPath = None
         self._blendName = None
         self._destPath = None
         self._destName = None
+        self._destEndImg = None
         self._progressText = "initializing..."
         self._progress = True
         self._finished = False
+        self._rProgress = False
         self._sshClient = paramiko.SSHClient()
+        self._sftpClient = None
         self._scpClient = None
+        self._sshOutput = ""
+        self._sshStdout = None
 
     @property
     def schedulerURI(self):
@@ -73,6 +84,46 @@ class Communicator():
         self._numNodes = value
 
     @property
+    def frameCnt(self):
+        return self._frameCnt
+
+    @frameCnt.setter
+    def frameCnt(self, value):
+        self._frameCnt = value
+
+    @property
+    def frameTOT(self):
+        return self._frameTOT
+
+    @frameTOT.setter
+    def frameTOT(self, value):
+        self._frameTOT = value
+
+    @property
+    def rDone(self):
+        return self._rDone
+
+    @rDone.setter
+    def rDone(self, value):
+        self._rDone = value
+
+    @property
+    def ccFRMStart(self):
+        return self._ccFRMStart
+
+    @ccFRMStart.setter
+    def ccFRMStart(self, value):
+        self._ccFRMStart = value
+
+    @property
+    def ccFRMEnd(self):
+        return self._ccFRMEnd
+
+    @ccFRMEnd.setter
+    def ccFRMEnd(self, value):
+        self._ccFRMEnd = value
+
+    @property
     def blendPath(self):
         return self._blendPath
 
@@ -105,6 +156,14 @@ class Communicator():
         self._destName = value
 
     @property
+    def destEndImg(self):
+        return self._destEndImg
+
+    @destEndImg.setter
+    def destEndImg(self, value):
+        self._destEndImg = value
+
+    @property
     def progressText(self):
         return self._progressText
 
@@ -131,6 +190,14 @@ class Communicator():
         self._finished = value
 
     @property
+    def rProgress(self):
+        return self._rProgress
+
+    @rProgress.setter
+    def rProgress(self, value):
+        self._rProgress = value
+
+    @property
     def sshClient(self):
         return self._sshClient
 
@@ -139,12 +206,36 @@ class Communicator():
         self._sshClient = value
 
     @property
+    def sftpClient(self):
+        return self._sftpClient
+
+    @sftpClient.setter
+    def sftpClient(self, value):
+        self._sftpClient = value
+
+    @property
     def scpClient(self):
         return self._scpClient
 
     @scpClient.setter
     def scpClient(self, value):
         self._scpClient = value
+
+    @property
+    def sshStdout(self):
+        return self._sshStdout
+
+    @sshStdout.setter
+    def sshStdout(self, value):
+        self._sshStdout = value
+
+    @property
+    def sshOutput(self):
+        return self._sshOutput
+
+    @sshOutput.setter
+    def sshOutput(self, value):
+        self._sshOutput = value
 
     def render(self):
         result = self.connect()
@@ -169,9 +260,17 @@ class Communicator():
         self.progressText = "Rendering blend file...."
         rendResult = self.blendRender()
         if(rendResult is False):
-            self.finish = True
+            self.finished = True
             return False
         self.progressText = "done."
+
+        self.progressText = "In progress...."
+        blendprog = self.progressRender()
+        if(blendprog is False):
+            self.finished = True
+            return False
+        self.progressText = "Rendering Complete!"
+
         self.finished = True
 
     def connect(self):
@@ -259,8 +358,44 @@ class Communicator():
         self.sshClient.exec_command(
             'blender -b ' + self.rBlend + ' -o ' + self.rendDest + "frame_#"
             " -E CYCLES -F PNG -a > blendOutput.txt && echo '+' >> "
-            "blendDone.txt"
+            "blendDone.txt "
         )
+        self.sshClient.exec_command('disown')
+        return True
+
+    def progressRender(self):
+        # displays progress for rendering
+        self.sftpClient = self.sshClient.open_sftp()
+        self.ccFRMStart = bpy.context.scene.frame_start
+        self.ccFRMEnd = bpy.context.scene.frame_end
+        self.frameTOT = (self.ccFRMEnd - self.ccFRMStart) + 1
+        self.destEndImg = (
+            self.rendDest + 'frame_' + str(self.ccFRMEnd) + '.png'
+        )
+        self.frameCnt = 0
+
+        while self.rProgress is False:
+            stdin, stdout, stderr = self.sshClient.exec_command(
+                "ls " + self.rendDest
+            )
+            self.sshStdout = stdout.readlines()
+
+            if self.rDone < 100:
+                try:
+                    self.sftpClient.chdir(self.rendDest)
+                    for index, line in enumerate(self.sshStdout):
+                        self.sshOutput = self.sshOutput + line
+                        self.rDone = int(100 * (index + 1) / self.frameTOT)
+                    self.progressText = ('Currently: ' + str(self.rDone) + '%')
+                    time.sleep(7)
+                except IOError as err:
+                    if err.errno == errno.ENOENT:
+                        rDone = 0
+                        print('Empty folder....please wait')
+                        time.sleep(7)
+            else:
+                # print("Rendering Complete!")
+                self.rProgress = True
         return True
 
     def disconnect(self):

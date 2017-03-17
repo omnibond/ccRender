@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.0 (2017-3-17)
+
+- Add render progress to the View header.
+
 ## 0.7.0 (2017-1-6)
 
 - Add changelog

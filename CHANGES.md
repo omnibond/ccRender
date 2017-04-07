@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.2 (2017-4-7)
+
+- Updated render process to accurate involve nodes and number of pluses in blendDone.txt file
+
 ## 0.8.1 (2017-3-17)
 
 - Add render progress to the View header.

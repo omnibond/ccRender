@@ -31,13 +31,18 @@ class Communicator():
         self._username = None
         self._password = None
         self._numNodes = 0
-        self._frameCnt = 0
+        self._frameIdx = 0
         self._frameTOT = 0
+        self._numPluses = 0
+        self._plusCnt = 0
+        self._ccIndex = 0
+        self._nodeIdx = 0
         self._rDone = 0
         self._ccFRMStart = None
         self._ccFRMEnd = None
         self._blendPath = None
         self._blendName = None
+        self._blendDone = None
         self._destPath = None
         self._destName = None
         self._destEndImg = None
@@ -84,12 +89,12 @@ class Communicator():
         self._numNodes = value
 
     @property
-    def frameCnt(self):
-        return self._frameCnt
+    def frameIdx(self):
+        return self._frameIdx
 
-    @frameCnt.setter
-    def frameCnt(self, value):
-        self._frameCnt = value
+    @frameIdx.setter
+    def frameIdx(self, value):
+        self._frameIdx = value
 
     @property
     def frameTOT(self):
@@ -98,6 +103,38 @@ class Communicator():
     @frameTOT.setter
     def frameTOT(self, value):
         self._frameTOT = value
+
+    @property
+    def numPluses(self):
+        return self._numPluses
+
+    @numPluses.setter
+    def numPluses(self, value):
+        self._numPluses = value
+
+    @property
+    def plusCnt(self):
+        return self._plusCnt
+
+    @plusCnt.setter
+    def plusCnt(self, value):
+        self._plusCnt = value
+
+    @property
+    def ccIndex(self):
+        return self._ccIndex
+
+    @ccIndex.setter
+    def ccIndex(self, value):
+        self._ccIndex = value
+
+    @property
+    def nodeIdx(self):
+        return self._nodeIdx
+
+    @nodeIdx.setter
+    def nodeIdx(self, value):
+        self._nodeIdx = value
 
     @property
     def rDone(self):
@@ -146,6 +183,14 @@ class Communicator():
     @destPath.setter
     def destPath(self, value):
         self._destPath = value
+
+    @property
+    def blendDone(self):
+        return self._blendDone
+
+    @blendDone.setter
+    def blendDone(self, value):
+        self._blendDone = value
 
     @property
     def destName(self):
@@ -356,6 +401,9 @@ class Communicator():
         # is done. Each additional '+' in the blendDone.txt is the number of
         # jobs blender has done and completed.
         self.sshClient.exec_command(
+            'rm -f blendDone.txt && touch blendDone.txt'
+        )
+        self.sshClient.exec_command(
             'blender -b ' + self.rBlend + ' -o ' + self.rendDest + "frame_#"
             " -E CYCLES -F PNG -a > blendOutput.txt && echo '+' >> "
             "blendDone.txt "
@@ -372,7 +420,7 @@ class Communicator():
         self.destEndImg = (
             self.rendDest + 'frame_' + str(self.ccFRMEnd) + '.png'
         )
-        self.frameCnt = 0
+        # self.frameCnt = 0
 
         while self.rProgress is False:
             stdin, stdout, stderr = self.sshClient.exec_command(
@@ -380,17 +428,29 @@ class Communicator():
             )
             self.sshStdout = stdout.readlines()
 
+            self.blendDone = self.sftpClient.open(
+                self.destPath + 'blendDone.txt', 'r'
+            )
+
+            with self.blendDone as file:
+                self.plusCnt = file.read()
+            self.numPluses = len(self.plusCnt) - self.plusCnt.count(b'\n')
+            self.nodeIdx = int(self.numNodes - self.numPluses)
+
             if self.rDone < 100:
                 try:
                     self.sftpClient.chdir(self.rendDest)
                     for index, line in enumerate(self.sshStdout):
                         self.sshOutput = self.sshOutput + line
-                        self.rDone = int(100 * (index + 1) / self.frameTOT)
+                        self.frameIdx = int(index + 1)
+                        self.ccIndex = abs(self.frameIdx - self.nodeIdx)
+                        self.rDone = int((self.ccIndex / self.frameTOT) * 100)
                     self.progressText = ('Currently: ' + str(self.rDone) + '%')
                     time.sleep(7)
                 except IOError as err:
                     if err.errno == errno.ENOENT:
                         rDone = 0
+                        self.progressText = ('Currently: ' + str(self.rDone) + '%')
                         print('Empty folder....please wait')
                         time.sleep(7)
             else:

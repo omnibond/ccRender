@@ -15,7 +15,7 @@ from scp import SCPClient
 bl_info = {
     "name": "CC Render",
     "author": "Omnibond",
-    "version": (0, 8, 1),
+    "version": (0, 8, 3),
     "blender": (2, 78, 0),
     "location": "View3D > Tools > ccSimple_Render",
     "description": "Cloudy Cluster Simple Render (alpha stage)",
@@ -267,20 +267,20 @@ class Communicator():
         self._scpClient = value
 
     @property
-    def sshStdout(self):
-        return self._sshStdout
-
-    @sshStdout.setter
-    def sshStdout(self, value):
-        self._sshStdout = value
-
-    @property
     def sshOutput(self):
         return self._sshOutput
 
     @sshOutput.setter
     def sshOutput(self, value):
         self._sshOutput = value
+
+    @property
+    def sshStdout(self):
+        return self._sshStdout
+
+    @sshStdout.setter
+    def sshStdout(self, value):
+        self._sshStdout = value
 
     def render(self):
         result = self.connect()
@@ -412,7 +412,7 @@ class Communicator():
         return True
 
     def progressRender(self):
-        # displays progress for rendering
+        # Displays progress for rendering
         self.sftpClient = self.sshClient.open_sftp()
         self.ccFRMStart = bpy.context.scene.frame_start
         self.ccFRMEnd = bpy.context.scene.frame_end
@@ -420,7 +420,6 @@ class Communicator():
         self.destEndImg = (
             self.rendDest + 'frame_' + str(self.ccFRMEnd) + '.png'
         )
-        # self.frameCnt = 0
 
         while self.rProgress is False:
             stdin, stdout, stderr = self.sshClient.exec_command(
@@ -445,16 +444,15 @@ class Communicator():
                         self.frameIdx = int(index + 1)
                         self.ccIndex = abs(self.frameIdx - self.nodeIdx)
                         self.rDone = int((self.ccIndex / self.frameTOT) * 100)
-                    self.progressText = ('Currently: ' + str(self.rDone) + '%')
+                    self.progressText = ('Progress: ' + str(self.rDone) + '%')
                     time.sleep(7)
                 except IOError as err:
                     if err.errno == errno.ENOENT:
                         rDone = 0
-                        self.progressText = ('Currently: ' + str(self.rDone) + '%')
+                        self.progressText = ('Progress: ' + str(self.rDone) + '%')
                         print('Empty folder....please wait')
                         time.sleep(7)
             else:
-                # print("Rendering Complete!")
                 self.rProgress = True
 
         return True
@@ -636,8 +634,6 @@ class ccRenderPanel(bpy.types.Panel):
         col = layout.column()
         row = col.row()
 
-        # Test Button. Will display "Progress" bar on header instead of panel
-        # will leave upon Esc or Right Mouse button.
         row.operator(operator="wm.ccmodal_timer_opt", text="Begin Render")
 
 
@@ -647,15 +643,9 @@ class KickoffRender(threading.Thread):
         super(KickoffRender, self).__init__(*args, **kwargs)
         self.communicator = communicator
 
-        # Used Threadding Lock to see about fixing the race condition
-        # VMs are easily recongizeable.
         self.ccLock = Lock()
 
     def run(self):
-        # Not sure if this is ideal fix for the threadding issue or not.
-        # Only cadavt is if the user attempts to render multiple jobs seconds
-        # from each other, Blender Terminal will display scp timeout message
-        # and would have to reload the blend file again for another attmept.
 
         self.ccLock.acquire()
         self.communicator.render()

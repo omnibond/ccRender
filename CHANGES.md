@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.8.3 (2017-4-14)
+
+-Changed "Currently" to "Progress" in progressRender.
+-Clean up addon for clarity
+
 ## 0.8.2 (2017-4-7)
 
 - Updated render process to accurate involve nodes and number of pluses in blendDone.txt file

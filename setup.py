@@ -12,7 +12,7 @@ with io.open('README.rst', encoding='utf-8') as fp:
 setup(
     name='ccRender',
     # version number (will change later)
-    version='0.8.4.dev2',
+    version='0.8.4.dev1',
     # used own name and email, will change later if necessary
     author='Cliffton Hicks',
     author_email='cliffton@omnibond.com',
@@ -21,7 +21,7 @@ setup(
     description='Cloud-based Blender rendering addon',
     long_description=description,
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 2 - Pre-Alpha',
         # Due to version of python Blender uses,
         # only the current Python version is supported.
         'Programming Language :: Python',

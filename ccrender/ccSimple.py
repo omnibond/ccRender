@@ -15,7 +15,7 @@ from scp import SCPClient
 bl_info = {
     "name": "CC Render",
     "author": "Omnibond",
-    "version": (0, 8, 3),
+    "version": (0, 8, 4),
     "blender": (2, 78, 0),
     "location": "View3D > Tools > ccSimple_Render",
     "description": "Cloudy Cluster Simple Render",

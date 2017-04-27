@@ -12,7 +12,7 @@ with io.open('README.rst', encoding='utf-8') as fp:
 setup(
     name='ccRender',
     # version number (will change later)
-    version='0.8.3.dev1',
+    version='0.8.4.dev2',
     # used own name and email, will change later if necessary
     author='Cliffton Hicks',
     author_email='cliffton@omnibond.com',
@@ -22,6 +22,8 @@ setup(
     long_description=description,
     classifiers=[
         'Development Status :: 3 - Alpha',
+        # Due to version of python Blender uses,
+        # only the current Python version is supported.
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',

@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.8.4 (2017-4-21)
+-Changed description in blender info
+
 ## 0.8.3 (2017-4-19)
 
 -Changed "Currently" to "Progress" in progressRender.

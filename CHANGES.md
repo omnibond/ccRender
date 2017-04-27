@@ -1,9 +1,10 @@
 # Changelog
 
-## 0.8.3 (2017-4-14)
+## 0.8.3 (2017-4-19)
 
 -Changed "Currently" to "Progress" in progressRender.
 -Clean up addon for clarity
+-Updated Readme.rst for clarification
 
 ## 0.8.2 (2017-4-7)
 

@@ -22,8 +22,6 @@ setup(
     long_description=description,
     classifiers=[
         'Development Status :: 3 - Alpha',
-        # Due to version of python Blender uses,
-        # only the current Python version is supported.
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',

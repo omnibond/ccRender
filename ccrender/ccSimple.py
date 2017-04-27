@@ -18,7 +18,7 @@ bl_info = {
     "version": (0, 8, 3),
     "blender": (2, 78, 0),
     "location": "View3D > Tools > ccSimple_Render",
-    "description": "Cloudy Cluster Simple Render (alpha stage)",
+    "description": "Cloudy Cluster Simple Render",
     "warning": "",
     "wiki_url": "",
     "category": "ccRender"}

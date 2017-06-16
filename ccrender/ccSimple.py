@@ -15,7 +15,7 @@ from scp import SCPClient
 bl_info = {
     "name": "CC Render",
     "author": "Omnibond",
-    "version": (0, 8, 4),
+    "version": (0, 9, 0),
     "blender": (2, 78, 0),
     "location": "View3D > Tools > ccSimple_Render",
     "description": "Cloudy Cluster Simple Render",
@@ -30,6 +30,7 @@ class Communicator():
         self._schedulerURI = None
         self._username = None
         self._password = None
+        self._shareName = None
         self._numNodes = 0
         self._frameIdx = 0
         self._frameTOT = 0
@@ -45,7 +46,8 @@ class Communicator():
         self._blendDone = None
         self._destPath = None
         self._destName = None
-        self._destEndImg = None
+        self._ccqBlender = None
+        self._blenderJS = None
         self._progressText = "initializing..."
         self._progress = True
         self._finished = False
@@ -79,6 +81,14 @@ class Communicator():
     @password.setter
     def password(self, value):
         self._password = value
+
+    @property
+    def shareName(self):
+        return self._shareName
+
+    @shareName.setter
+    def shareName(self, value):
+        self._shareName = value
 
     @property
     def numNodes(self):
@@ -201,12 +211,20 @@ class Communicator():
         self._destName = value
 
     @property
-    def destEndImg(self):
-        return self._destEndImg
+    def ccqBlender(self):
+        return self._ccqBlender
 
-    @destEndImg.setter
-    def destEndImg(self, value):
-        self._destEndImg = value
+    @ccqBlender.setter
+    def ccqBlender(self, value):
+        self._ccqBlender = value
+
+    @property
+    def blenderJS(self):
+        return self._blenderJS
+
+    @blenderJS.setter
+    def blenderJS(self, value):
+        self._blenderJS = value
 
     @property
     def progressText(self):
@@ -290,9 +308,14 @@ class Communicator():
 
         self.progressText = "done."
 
-        self.progressText = "scp'ing blend file..."
+        self.progressText = "scp'ing blend file & job script..."
         prepResult = self.blendPrep()
         if(prepResult is False):
+            self.finished = True
+            return False
+
+        prepCCQResult = self.ccqSetup()
+        if(prepCCQResult is False):
             self.finished = True
             return False
 
@@ -348,11 +371,12 @@ class Communicator():
     def blendPrep(self):
         self.blendPath = os.path.dirname(bpy.data.filepath)
         self.blendName = bpy.path.basename(bpy.data.filepath)
-        self.destPath = '/home/' + self.username + '/'
+        self.destPath = '/mnt/' + self.shareName + '/'
         self.destName = bpy.path.display_name_from_filepath(bpy.data.filepath)
 
-        self.rendDest = self.destPath + self.destName + '/frames/'
-        self.rBlend = self.destPath + self.destName + '/' + self.blendName
+        self.blendDest = self.destPath + self.destName + '/'
+        self.rendDest = self.blendDest + 'frames/'
+        self.rBlend = self.blendDest + self.blendName
 
         time.sleep(2)
 
@@ -370,28 +394,80 @@ class Communicator():
 
         return True
 
+    def ccqSetup(self):
+            # Template script for Slurm HPC Scheduler to be added to the cluster
+            # Local placeholder for blender job script
+            self.blenderJS = self.blendPath + "/blender.sh"
+            self.ccqBlender = self.destPath + 'blender/2.76/blender.sh'
+
+            slurmTemp = ("#!/bin/bash\n\n"
+
+                "#Slurm HPC Scheduler\n\n"
+
+                "#SBATCH -N {sNodes}\n\n"
+
+                "#Shared FS is the same name specified in the CloudyCluster\n"
+                "#creation wizard when launching the cluster.\n"
+                "export SHARED_FS_NAME=/mnt/{sFSNAME} \n\n"
+
+                "#Blender version for Scheduler\n"
+                "module add blender/2.76\n\n"
+
+                "cd $SHARED_FS_NAME/blender/2.76\n"
+                "mpiexec blender -b $SHARED_FS_NAME/{sBlendDIR}/{sBlendFile} -o "
+                "$SHARED_FS_NAME'/{sBlendDIR}/frames/frame_#' -E CYCLES -F PNG -a &&\n"
+                "mpirun printf '+' >> $SHARED_FS_NAME/{sBlendDIR}/blendDone.txt\n"
+            )
+
+            slurmContext = {
+                "sNodes" : self.numNodes,
+                "sFSNAME" : self.shareName,
+                "sBlendDIR" : self.destName,
+                "sBlendFile" : self.blendName
+            }
+
+            # "newline='\n' "- needed for Windows users to make a job script
+            # the same way as for Unix users.
+            with open(self.blenderJS, 'w', newline="\n") as blendSlurm:
+                blendSlurm.write(slurmTemp.format(**slurmContext))
+
+            return True
+
+
     def sendBlend(self):
+        #Makes a project folder
         self.progressText = 'trying to mkdir ' + self.destPath + self.destName
         self.sshClient.exec_command('mkdir ' + self.destPath + self.destName)
 
         # Makes a frames folder
         self.progressText = (
-            'trying to mkdir ' + self.destPath + self.destName + '/frames'
+            'Trying to mkdir ' + self.destPath + self.destName + '/frames'
         )
 
         self.sshClient.exec_command(
-            'mkdir ' + self.destPath + self.destName + '/frames'
+            'mkdir ' + self.blendDest + 'frames'
         )
 
         time.sleep(2)
 
         self.scpClient = SCPClient(self.sshClient.get_transport())
         self.progressText = (
-            'copying blend file to ' + self.destPath + self.destName + '/' + self.blendName
+            'Copying blend file to ' + self.blendDest + self.blendName
         )
         self.scpClient.put(
-            bpy.data.filepath, self.destPath + self.destName + '/' + self.blendName
+            bpy.data.filepath, self.blendDest + self.blendName
         )
+
+        #Sending blender job script to blender folder in the instance.
+        self.progressText = (
+            'Copying job script to scheduler...'
+        )
+        self.scpClient.put(
+            self.blenderJS, self.ccqBlender
+        )
+
+        #Deleting local copy
+        os.remove(self.blenderJS)
 
         return True
 
@@ -400,13 +476,14 @@ class Communicator():
         # blendDone.txt outputs a symbol '+' to indicate the rendering job
         # is done. Each additional '+' in the blendDone.txt is the number of
         # jobs blender has done and completed.
+
         self.sshClient.exec_command(
-            'rm -f blendDone.txt && touch blendDone.txt'
+            "rm -f " + self.blendDest + "blendDone.txt &&"
+            " touch " + self.blendDest + "blendDone.txt"
         )
+
         self.sshClient.exec_command(
-            'blender -b ' + self.rBlend + ' -o ' + self.rendDest + "frame_#"
-            " -E CYCLES -F PNG -a > blendOutput.txt && echo '+' >> "
-            "blendDone.txt "
+            'ccqsub -js ' + self.ccqBlender
         )
         self.sshClient.exec_command('disown')
         return True
@@ -417,9 +494,6 @@ class Communicator():
         self.ccFRMStart = bpy.context.scene.frame_start
         self.ccFRMEnd = bpy.context.scene.frame_end
         self.frameTOT = (self.ccFRMEnd - self.ccFRMStart) + 1
-        self.destEndImg = (
-            self.rendDest + 'frame_' + str(self.ccFRMEnd) + '.png'
-        )
 
         while self.rProgress is False:
             stdin, stdout, stderr = self.sshClient.exec_command(
@@ -428,7 +502,7 @@ class Communicator():
             self.sshStdout = stdout.readlines()
 
             self.blendDone = self.sftpClient.open(
-                self.destPath + 'blendDone.txt', 'r'
+                self.blendDest + 'blendDone.txt', 'r'
             )
 
             with self.blendDone as file:
@@ -445,7 +519,7 @@ class Communicator():
                         self.ccIndex = abs(self.frameIdx - self.nodeIdx)
                         self.rDone = int((self.ccIndex / self.frameTOT) * 100)
                     self.progressText = ('Progress: ' + str(self.rDone) + '%')
-                    time.sleep(7)
+                    time.sleep(10)
                 except IOError as err:
                     if err.errno == errno.ENOENT:
                         rDone = 0
@@ -515,6 +589,7 @@ class ccModalTimerOperator(bpy.types.Operator):
         ccSchedulerURI = context.scene.ccSchedulerURI
         ccUsername = context.scene.ccUsername
         ccPassword = context.scene.ccPassword
+        ccShareName = context.scene.ccShareName
         ccNumNodes = context.scene.ccNumNodes
 
         # TODO: valudate the variables here
@@ -523,6 +598,7 @@ class ccModalTimerOperator(bpy.types.Operator):
         ccSchCheck = urlparse(ccSchedulerURI)
         ccURegex = re.fullmatch(r"^[a-z_][a-z0-9_-]*[$]?$", ccUsername)
         ccPRegex = re.fullmatch(r"^[A-Za-z0-9_$-]+$", ccPassword)
+        ccEnvCheck = ccShareName
 
         if ccSchCheck.path == '':
             ccvalidateMsg = "Invalid URL, it needs an IPv4 or Domain Name"
@@ -551,7 +627,13 @@ class ccModalTimerOperator(bpy.types.Operator):
 
         if len(ccPassword) > 32:
             ccvalidateMsg = ("Your password is too long, "
-                             "it must be less than 32 character!")
+                             "it must be less than 32 characters!")
+            print("Error: " + ccvalidateMsg)
+            return ccvalidateMsg
+
+        if ccEnvCheck == '':
+            ccvalidateMsg = ("Environment name is empty. Please use the same name as "
+                             "you used when you setup the environment!")
             print("Error: " + ccvalidateMsg)
             return ccvalidateMsg
 
@@ -560,6 +642,7 @@ class ccModalTimerOperator(bpy.types.Operator):
         communicator.username = ccUsername
         communicator.password = ccPassword
         communicator.numNodes = ccNumNodes
+        communicator.shareName = ccShareName
 
         return True
 
@@ -612,6 +695,10 @@ class ccRenderPanel(bpy.types.Panel):
         max=1000,
         step=1
     )
+    bpy.types.Scene.ccShareName = bpy.props.StringProperty(
+        name="CC Environment Name",
+        default="efsdata"
+    )
 
     def check(self, context):
         return communicator.progress
@@ -627,6 +714,8 @@ class ccRenderPanel(bpy.types.Panel):
         row.prop(context.scene, "ccUsername")
         row = col.row()
         row.prop(context.scene, "ccPassword")
+        row = col.row()
+        row.prop(context.scene, "ccShareName")
         row = col.row()
         row.prop(context.scene, "ccNumNodes")
         row = col.row()

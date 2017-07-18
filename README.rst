@@ -8,9 +8,11 @@ all nodes.
 
 Python requirements
 -------------------
+
 Operating System's Python envirionment **must match** with Blender's Python envirionment. Currently this addon supports Python 3.5. Depending on the operating system would determine the following methods for instalation or verifying of Python and pip:
 
 Ubuntu 16.04
+^^^^^^^^^^^^
 
 Python 3.5 should be included by default, however Python3's pip might not. To install pip onto your Python3 (not Python), use the following command:
 
@@ -21,6 +23,7 @@ Python 3.5 should be included by default, however Python3's pip might not. To in
 
 
 Ubuntu 14.04
+^^^^^^^^^^^^
 
 Python 3.4 is included with this version and requires an upgrade to use the addon. To install the latest version of Python and add pip:
 
@@ -41,22 +44,30 @@ and then download and install pip to the specific Python version (e.g. Python 3.
 
 
 Windows
+^^^^^^^
 
 Python 3.5 can be download and install directly from `Python.org
-<https://www.python.org/downloads/release/python-353/>`_. When installing, make sure that PATH option is enabled or manually add python's main directory and scripts subfolder to the PATH in the Environment Vairables.
+<https://www.python.org/downloads/release/python-353/>`_. When installing, make sure that PATH option is enabled or manually add python's main directory and scripts subfolder to the PATH in the Environment Vairables. 
+
+Pip should be included with Python's installation. If you wish to install it, download `get-pip.py <https://bootstrap.pypa.io/get-pip.py>`_ to a folder on your computer.
+
+Open a command prompt window and navigate to the folder containing :get-pip.py:.
+
+Then run :python get-pip.py:.
 
 
-Paramiko requirements
----------------------
+Paramiko & pyperclip requirements
+---------------------------------
 
-Paramiko has to be included into blender's Python environment. This package includes the installation needed for paramiko.  Ubuntu's installation differs than Windows in terms of dependencies though the installation is the same.: 
+Paramiko and pyperclip has to be included into blender's Python environment. This package includes the installation needed for both of the modules.  Ubuntu's installation differs than Windows in terms of dependencies though the installation is the same.: 
 
 Ubuntu 14.04 & 16.04
+^^^^^^^^^^^^^^^^^^^^
 
 Install the following dependencies first.
 ::
 
-    sudo apt-get install build-essential libffi-dev libssl-dev python3.5-dev git-core
+    sudo apt-get install build-essential libffi-dev libssl-dev python3.5-dev
 
 
 Then use the following commands:
@@ -66,11 +77,22 @@ Then use the following commands:
     mkdir /home/user/blenderscripts/addons
     mkdir /home/user/blenderscripts/modules
     mkdir /home/user/blenderscripts/startup
-    pip3 install --target=/home/<user>/blenderscripts/modules/ git+https://github.com/omnibond/ccRender
+    pip3 install --target=/home/<user>/blenderscripts/modules/ ccRender
+
+If you wish to install them through Github, the process is the similar. You will need the following dependency:
+::
+
+    git-core
+
+Then use the following command after creating the folders:
+::
+
+    pip3 install --target=/home/<user>/blendscripts/modules/ git+https://github.com/omnibond/ccRender
+
 
 If you are using Ubuntu 14.04, the process is the same except use pip3.5 instead of pip3 to ensure that the package is installing to the right Python version.
 
-Then set the value in preferences -> file -> scripts to
+Open blender and set the value in preferences -> file -> scripts to
 
 ::
 
@@ -79,7 +101,7 @@ Then set the value in preferences -> file -> scripts to
 and restart blender.
 
 
-An additional folder, called ccrender will be installed to the same location as paramiko and can be moved to the addons folder. To install it onto blender, install the Python file in preferences -> addon -> "install to file" and find the addon in:
+An additional folder, called ccrender will be installed to the same location as paramiko and pyperclip. This can be moved to the addons folder but it's optional. To install it onto blender, install the Python file in preferences -> addon -> "install to file" and find the addon in:
 
 ::
 
@@ -88,9 +110,8 @@ An additional folder, called ccrender will be installed to the same location as 
 Then enable the addon and save user settings.
 
 
-
 Windows
-
+^^^^^^^
 Before installing the package from GitHub, Git must be installed. You can download and install the latest version on from Git website under `Git for Windows
 <https://git-scm.com/download/win>`_.
 
@@ -109,7 +130,7 @@ Then open up command panel as Administrator and pip install ccRender into the mo
 
     pip install --target=C:\Users\<username>\Documents\blenderscripts\modules\ git+https://github.com/omnibond/ccRender
 
-and then set the value in preferences -> file -> scripts to
+Then open Blender and set the value in preferences -> file -> scripts to
 
 ::
 
@@ -117,8 +138,12 @@ and then set the value in preferences -> file -> scripts to
 
 and restart blender.
 
+The process is the same for installation through PyPi. Use this command in the command panel as Administrator:
+::
 
-An additional folder, called ccrender will be installed to the same location as paramiko and can be moved to the addons folder. To install it onto blender, install the Python file in preferences -> addon -> "install to file" and find the addon in:
+    pip install --target=C:\Users\<username>\Documents\blenderscripts\modules\ ccRender
+
+An additional folder, called ccrender will be installed to the same location as paramiko and pyperclip. This can be moved to the addons folder but it's optional. To install it onto blender, install the Python file in preferences -> addon -> "install to file" and find the addon in:
 
 ::
 

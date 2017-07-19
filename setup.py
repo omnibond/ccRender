@@ -12,7 +12,7 @@ with io.open('README.rst', encoding='utf-8') as fp:
 setup(
     name='ccRender',
     # version number (will change later)
-    version='0.8.3.dev1',
+    version='0.10.0.a1',
     # used own name and email, will change later if necessary
     author='Cliffton Hicks',
     author_email='cliffton@omnibond.com',
@@ -30,5 +30,5 @@ setup(
     ],
     py_modules=['ccrender'],
     packages=find_packages(exclude=['samples', 'tests']),
-    install_requires=['scp'],
+    install_requires=['scp', 'pyperclip'],
 )

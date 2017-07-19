@@ -1,10 +1,8 @@
 ccRender
 ========
 
-An addon for blender that renders a blend file to the cloud.
-This uses paramiko libraries to SSH into an HPC scheduler node,
-copy over the file, and envoke a job to execute blender rendering
-all nodes.
+An addon for blender that renders a blend file to the cloud. This uses paramiko libraries to SSH into an HPC scheduler node,
+copy over the file, and envoke a job to execute blender rendering all nodes.
 
 Python requirements
 -------------------
@@ -46,8 +44,7 @@ and then download and install pip to the specific Python version (e.g. Python 3.
 Windows
 ^^^^^^^
 
-Python 3.5 can be download and install directly from `Python.org
-<https://www.python.org/downloads/release/python-353/>`_. When installing, make sure that PATH option is enabled or manually add python's main directory and scripts subfolder to the PATH in the Environment Vairables. 
+Python 3.5 can be download and install directly from `Python.org <https://www.python.org/downloads/release/python-353/>`_. When installing, make sure that PATH option is enabled or manually add python's main directory and scripts subfolder to the PATH in the Environment Vairables. 
 
 Pip should be included with Python's installation. If you wish to install it, download `get-pip.py <https://bootstrap.pypa.io/get-pip.py>`_ to a folder on your computer.
 
@@ -59,7 +56,7 @@ Then run ``python get-pip.py``.
 Paramiko & pyperclip requirements
 ---------------------------------
 
-Paramiko and pyperclip has to be included into blender's Python environment. This package includes the installation needed for both of the modules.  Ubuntu's installation differs than Windows in terms of dependencies though the installation is the same.: 
+Paramiko and pyperclip has to be included into blender's Python environment. This package includes the installation needed for both of the modules.  Ubuntu's installation differs than Windows in terms of dependencies though the installation is the same. 
 
 Ubuntu 14.04 & 16.04
 ^^^^^^^^^^^^^^^^^^^^
@@ -73,18 +70,18 @@ Install the following dependencies first.
 Then use the following commands:
 ::
     
-    mkdir /home/user/blenderscripts
-    mkdir /home/user/blenderscripts/addons
-    mkdir /home/user/blenderscripts/modules
-    mkdir /home/user/blenderscripts/startup
+    mkdir /home/<user>/blenderscripts
+    mkdir /home/<user>/blenderscripts/addons
+    mkdir /home/<user>/blenderscripts/modules
+    mkdir /home/<user>/blenderscripts/startup
     pip3 install --target=/home/<user>/blenderscripts/modules/ ccRender
 
-If you wish to install them through Github, the process is the similar. You will need the following dependency:
+If you wish to install them through Github, the process is similar. You will need the following dependency:
 ::
 
     git-core
 
-Then use the following command after creating the folders:
+Then use the following command after creating the folders :
 ::
 
     pip3 install --target=/home/<user>/blendscripts/modules/ git+https://github.com/omnibond/ccRender
@@ -100,8 +97,7 @@ Open blender and set the value in ``preferences -> file -> scripts`` to
 
 and restart blender.
 
-
-An additional folder, called ccrender will be installed to the same location as paramiko and pyperclip. This can be moved to the addons folder but it's optional. To install it onto blender, install the Python file in ``preferences -> addon -> install to file`` and find the addon in:
+An additional folder, called ``ccrender`` will be installed to the same location as paramiko and pyperclip. This can be moved to the addons folder but it's optional. To install it onto blender, install the Python file in ``preferences -> addon -> install to file`` and find the addon in:
 
 ::
 
@@ -143,7 +139,7 @@ The process is the same for installation through PyPi. Use this command in the c
 
     pip install --target=C:\Users\<username>\Documents\blenderscripts\modules\ ccRender
 
-An additional folder, called ccrender will be installed to the same location as paramiko and pyperclip. This can be moved to the addons folder but it's optional. To install it onto blender, install the Python file in ``preferences -> addon -> install to file``  and find the addon in:
+An additional folder, called ``ccrender`` will be installed to the same location as paramiko and pyperclip. This can be moved to the addons folder but it's optional. To install it onto blender, install the Python file in ``preferences -> addon -> install to file``  and find the addon in:
 
 ::
 

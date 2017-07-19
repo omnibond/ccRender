@@ -51,9 +51,9 @@ Python 3.5 can be download and install directly from `Python.org
 
 Pip should be included with Python's installation. If you wish to install it, download `get-pip.py <https://bootstrap.pypa.io/get-pip.py>`_ to a folder on your computer.
 
-Open a command prompt window and navigate to the folder containing :get-pip.py:.
+Open a command prompt window and navigate to the folder containing ``get-pip.py``.
 
-Then run :python get-pip.py:.
+Then run ``python get-pip.py``.
 
 
 Paramiko & pyperclip requirements
@@ -92,7 +92,7 @@ Then use the following command after creating the folders:
 
 If you are using Ubuntu 14.04, the process is the same except use pip3.5 instead of pip3 to ensure that the package is installing to the right Python version.
 
-Open blender and set the value in preferences -> file -> scripts to
+Open blender and set the value in ``preferences -> file -> scripts`` to
 
 ::
 
@@ -101,7 +101,7 @@ Open blender and set the value in preferences -> file -> scripts to
 and restart blender.
 
 
-An additional folder, called ccrender will be installed to the same location as paramiko and pyperclip. This can be moved to the addons folder but it's optional. To install it onto blender, install the Python file in preferences -> addon -> "install to file" and find the addon in:
+An additional folder, called ccrender will be installed to the same location as paramiko and pyperclip. This can be moved to the addons folder but it's optional. To install it onto blender, install the Python file in ``preferences -> addon -> install to file`` and find the addon in:
 
 ::
 
@@ -130,7 +130,7 @@ Then open up command panel as Administrator and pip install ccRender into the mo
 
     pip install --target=C:\Users\<username>\Documents\blenderscripts\modules\ git+https://github.com/omnibond/ccRender
 
-Then open Blender and set the value in preferences -> file -> scripts to
+Then open Blender and set the value in ``preferences -> file -> scripts`` to
 
 ::
 
@@ -143,7 +143,7 @@ The process is the same for installation through PyPi. Use this command in the c
 
     pip install --target=C:\Users\<username>\Documents\blenderscripts\modules\ ccRender
 
-An additional folder, called ccrender will be installed to the same location as paramiko and pyperclip. This can be moved to the addons folder but it's optional. To install it onto blender, install the Python file in preferences -> addon -> "install to file" and find the addon in:
+An additional folder, called ccrender will be installed to the same location as paramiko and pyperclip. This can be moved to the addons folder but it's optional. To install it onto blender, install the Python file in ``preferences -> addon -> install to file``  and find the addon in:
 
 ::
 

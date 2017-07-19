@@ -5,6 +5,10 @@ import re
 import socket
 import time
 import threading
+import decimal
+
+import pyperclip
+
 
 from urllib.parse import urlparse
 from threading import Lock
@@ -15,7 +19,7 @@ from scp import SCPClient
 bl_info = {
     "name": "CC Render",
     "author": "Omnibond",
-    "version": (0, 9, 0),
+    "version": (0, 10, 0),
     "blender": (2, 78, 0),
     "location": "View3D > Tools > ccSimple_Render",
     "description": "Cloudy Cluster Simple Render",
@@ -28,10 +32,15 @@ class Communicator():
 
     def __init__(self):
         self._schedulerURI = None
+        self._webDavURI = None
         self._username = None
         self._password = None
         self._shareName = None
+        self._schedulerType = None
         self._numNodes = 0
+        self._spotPrice = False
+        self._spAmount = 0.00
+        self._instanceType = None
         self._frameIdx = 0
         self._frameTOT = 0
         self._numPluses = 0
@@ -67,6 +76,14 @@ class Communicator():
         self._schedulerURI = value
 
     @property
+    def webDavURI(self):
+        return self._webDavURI
+
+    @webDavURI.setter
+    def webDavURI(self, value):
+        self._webDavURI = value
+
+    @property
     def username(self):
         return self._username
 
@@ -91,12 +108,44 @@ class Communicator():
         self._shareName = value
 
     @property
+    def schedulerType(self):
+        return self._schedulerType
+
+    @schedulerType.setter
+    def schedulerType(self, value):
+        self._schedulerType = value
+
+    @property
     def numNodes(self):
         return self._numNodes
 
     @numNodes.setter
     def numNodes(self, value):
         self._numNodes = value
+
+    @property
+    def spotPrice(self):
+        return self._spotPrice
+
+    @spotPrice.setter
+    def spotPrice(self, value):
+        self._spotPrice = value
+
+    @property
+    def spAmount(self):
+        return self._spAmount
+
+    @spAmount.setter
+    def spAmount(self, value):
+        self._spAmount = value
+
+    @property
+    def instanceType(self):
+        return self._instanceType
+
+    @instanceType.setter
+    def instanceType(self, value):
+        self._instanceType = value
 
     @property
     def frameIdx(self):
@@ -314,13 +363,16 @@ class Communicator():
             self.finished = True
             return False
 
-        prepCCQResult = self.ccqSetup()
+        if(self.schedulerType == "TORQUE"):
+            prepCCQResult = self.ccqTSetup()
+        else:
+            prepCCQResult = self.ccqSSetup()
         if(prepCCQResult is False):
             self.finished = True
             return False
 
-        result = self.sendBlend()
-        if(result is False):
+        sendResult = self.sendBlend()
+        if(sendResult is False):
             self.finished = True
             return False
         self.progressText = "done."
@@ -332,12 +384,17 @@ class Communicator():
             return False
         self.progressText = "done."
 
-        self.progressText = "In progress...."
+        self.progressText = "Creating Resourses...."
         blendprog = self.progressRender()
         if(blendprog is False):
             self.finished = True
             return False
-        self.progressText = "Rendering Complete!"
+        self.progressText = "done."
+
+        self.progressText = "Rendering complete!"
+        print("Render Output: " + self.webDavURI)
+
+        self.disconnect()
 
         self.finished = True
 
@@ -377,6 +434,7 @@ class Communicator():
         self.blendDest = self.destPath + self.destName + '/'
         self.rendDest = self.blendDest + 'frames/'
         self.rBlend = self.blendDest + self.blendName
+        self.webDavURI = "https://" + self.schedulerURI + self.rendDest
 
         time.sleep(2)
 
@@ -388,43 +446,87 @@ class Communicator():
             self.progressText = 'Error: Save file first!'
             return False
 
-        # Changes overwrite to false and saves blend file before sending.
+        # Ensures render overwrite remains false and 
+        # saves blend file before sending.
         bpy.context.scene.render.use_overwrite = False
         bpy.ops.wm.save_mainfile()
 
         return True
 
-    def ccqSetup(self):
+    def ccqSSetup(self):
             # Template script for Slurm HPC Scheduler to be added to the cluster
             # Local placeholder for blender job script
             self.blenderJS = self.blendPath + "/blender.sh"
             self.ccqBlender = self.destPath + 'blender/2.76/blender.sh'
 
-            slurmTemp = ("#!/bin/bash\n\n"
+            # Converts float into a decimal.
+            # Round to two decimal places.
 
-                "#Slurm HPC Scheduler\n\n"
+            d = decimal.Decimal(self.spAmount)
 
-                "#SBATCH -N {sNodes}\n\n"
+            spDecimal = d.quantize(decimal.Decimal(10) ** -2)
 
-                "#Shared FS is the same name specified in the CloudyCluster\n"
-                "#creation wizard when launching the cluster.\n"
-                "export SHARED_FS_NAME=/mnt/{sFSNAME} \n\n"
+            if(self.spotPrice is True):
+                slurmTemp = (
+                    "#!/bin/bash\n\n"
 
-                "#Blender version for Scheduler\n"
-                "module add blender/2.76\n\n"
+                    "#CC -us yes\n"
+                    "#CC -sp {spSTarget}\n"
+                    "#CC -it {sInstance}\n\n"
 
-                "cd $SHARED_FS_NAME/blender/2.76\n"
-                "mpiexec blender -b $SHARED_FS_NAME/{sBlendDIR}/{sBlendFile} -o "
-                "$SHARED_FS_NAME'/{sBlendDIR}/frames/frame_#' -E CYCLES -F PNG -a &&\n"
-                "mpirun printf '+' >> $SHARED_FS_NAME/{sBlendDIR}/blendDone.txt\n"
-            )
+                    "#Slurm HPC Scheduler\n\n"
 
-            slurmContext = {
-                "sNodes" : self.numNodes,
-                "sFSNAME" : self.shareName,
-                "sBlendDIR" : self.destName,
-                "sBlendFile" : self.blendName
-            }
+                    "#SBATCH -N {sNodes}\n\n"
+
+                    "#Shared FS is the same name specified in the CloudyCluster\n"
+                    "#creation wizard when launching the cluster.\n"
+                    "export SHARED_FS_NAME=/mnt/{sFSNAME} \n\n"
+
+                    "#Blender version for Scheduler\n"
+                    "module add blender/2.76\n\n"
+
+                    "cd $SHARED_FS_NAME/blender/2.76\n"
+                    "mpiexec blender -b $SHARED_FS_NAME/{sBlendDIR}/{sBlendFile} -o "
+                    "$SHARED_FS_NAME'/{sBlendDIR}/frames/frame_#' -E CYCLES -F PNG -a &&\n"
+                    "mpirun printf '+' >> $SHARED_FS_NAME/{sBlendDIR}/blendDone.txt\n"
+                )
+
+                slurmContext = {
+                    "spSTarget": str(spDecimal),
+                    "sInstance": self.instanceType,
+                    "sNodes": self.numNodes,
+                    "sFSNAME": self.shareName,
+                    "sBlendDIR": self.destName,
+                    "sBlendFile": self.blendName
+                }
+
+            else:
+                slurmTemp = (
+                    "#!/bin/bash\n\n"
+
+                    "#Slurm HPC Scheduler\n\n"
+
+                    "#SBATCH -N {sNodes}\n\n"
+
+                    "#Shared FS is the same name specified in the CloudyCluster\n"
+                    "#creation wizard when launching the cluster.\n"
+                    "export SHARED_FS_NAME=/mnt/{sFSNAME} \n\n"
+
+                    "#Blender version for Scheduler\n"
+                    "module add blender/2.76\n\n"
+
+                    "cd $SHARED_FS_NAME/blender/2.76\n"
+                    "mpiexec blender -b $SHARED_FS_NAME/{sBlendDIR}/{sBlendFile} -o "
+                    "$SHARED_FS_NAME'/{sBlendDIR}/frames/frame_#' -E CYCLES -F PNG -a &&\n"
+                    "mpirun printf '+' >> $SHARED_FS_NAME/{sBlendDIR}/blendDone.txt\n"
+                )
+
+                slurmContext = {
+                    "sNodes": self.numNodes,
+                    "sFSNAME": self.shareName,
+                    "sBlendDIR": self.destName,
+                    "sBlendFile": self.blendName
+                }
 
             # "newline='\n' "- needed for Windows users to make a job script
             # the same way as for Unix users.
@@ -433,9 +535,90 @@ class Communicator():
 
             return True
 
+    def ccqTSetup(self):
+            # Template script for Torque/Maui HPC Scheduler to be added to the cluster
+            # Local placeholder for blender job script
+            self.blenderJS = self.blendPath + "/blender.sh"
+            self.ccqBlender = self.destPath + 'blender/2.76/blender.sh'
+
+            # Converts float into a decimal.
+            # Round to two decimal places.
+
+            d = decimal.Decimal(self.spAmount)
+
+            spDecimal = d.quantize(decimal.Decimal(10) ** -2)
+
+            if(self.spotPrice is True):
+                torqueTemp = (
+                    "#!/bin/bash\n\n"
+
+                    "#CC -us yes\n"
+                    "#CC -sp {spTTarget}\n"
+                    "#CC -it {tInstance}\n\n"
+
+                    "#Torque/Maui HPC Scheduler\n\n"
+
+                    "#PBS -l nodes={tNodes}\n\n"
+
+                    "#Shared FS is the same name specified in the CloudyCluster\n"
+                    "#creation wizard when launching the cluster.\n"
+                    "export SHARED_FS_NAME=/mnt/{tFSNAME} \n\n"
+
+                    "#Blender version for Scheduler\n"
+                    "module add blender/2.76\n\n"
+
+                    "cd $SHARED_FS_NAME/blender/2.76\n"
+                    "mpiexec blender -b $SHARED_FS_NAME/{tBlendDIR}/{tBlendFile} -o "
+                    "$SHARED_FS_NAME'/{tBlendDIR}/frames/frame_#' -E CYCLES -F PNG -a &&\n"
+                    "mpirun printf '+' >> $SHARED_FS_NAME/{tBlendDIR}/blendDone.txt\n"
+                )
+
+                torqueContext = {
+                    "spTTarget": str(spDecimal),
+                    "tInstance": self.instanceType,
+                    "tNodes": self.numNodes,
+                    "tFSNAME": self.shareName,
+                    "tBlendDIR": self.destName,
+                    "tBlendFile": self.blendName
+                }
+
+            else:
+                torqueTemp = (
+                    "#!/bin/bash\n\n"
+
+                    "#Torque/Maui HPC Scheduler\n\n"
+
+                    "#PBS -l nodes={tNodes}\n\n"
+
+                    "#Shared FS is the same name specified in the CloudyCluster\n"
+                    "#creation wizard when launching the cluster.\n"
+                    "export SHARED_FS_NAME=/mnt/{tFSNAME} \n\n"
+
+                    "#Blender version for Scheduler\n"
+                    "module add blender/2.76\n\n"
+
+                    "cd $SHARED_FS_NAME/blender/2.76\n"
+                    "mpiexec blender -b $SHARED_FS_NAME/{tBlendDIR}/{tBlendFile} -o "
+                    "$SHARED_FS_NAME'/{tBlendDIR}/frames/frame_#' -E CYCLES -F PNG -a &&\n"
+                    "mpirun printf '+' >> $SHARED_FS_NAME/{tBlendDIR}/blendDone.txt\n"
+                )
+
+                torqueContext = {
+                    "tNodes": self.numNodes,
+                    "tFSNAME": self.shareName,
+                    "tBlendDIR": self.destName,
+                    "tBlendFile": self.blendName
+                }
+
+            # "newline='\n' "- needed for Windows users to make a job script
+            # the same way as for Unix users.
+            with open(self.blenderJS, 'w', newline="\n") as blendTorque:
+                blendTorque.write(torqueTemp.format(**torqueContext))
+
+            return True
 
     def sendBlend(self):
-        #Makes a project folder
+        # Makes a project folder
         self.progressText = 'trying to mkdir ' + self.destPath + self.destName
         self.sshClient.exec_command('mkdir ' + self.destPath + self.destName)
 
@@ -443,7 +626,6 @@ class Communicator():
         self.progressText = (
             'Trying to mkdir ' + self.destPath + self.destName + '/frames'
         )
-
         self.sshClient.exec_command(
             'mkdir ' + self.blendDest + 'frames'
         )
@@ -458,7 +640,7 @@ class Communicator():
             bpy.data.filepath, self.blendDest + self.blendName
         )
 
-        #Sending blender job script to blender folder in the instance.
+        # Sending blender job script to blender folder in the instance.
         self.progressText = (
             'Copying job script to scheduler...'
         )
@@ -466,16 +648,15 @@ class Communicator():
             self.blenderJS, self.ccqBlender
         )
 
-        #Deleting local copy
+        # Deleting local Blender JS copy
         os.remove(self.blenderJS)
 
         return True
 
     def blendRender(self):
-        # blendOutput.txt includes detail rendering process, while
-        # blendDone.txt outputs a symbol '+' to indicate the rendering job
-        # is done. Each additional '+' in the blendDone.txt is the number of
-        # jobs blender has done and completed.
+        # blendDone.txt outputs a symbol '+' to indicate a completed rendering
+        # job in a node. Each additional '+' in the file indicates the number
+        # of nodes Blender has completed rendering in that same job.
 
         self.sshClient.exec_command(
             "rm -f " + self.blendDest + "blendDone.txt &&"
@@ -485,6 +666,7 @@ class Communicator():
         self.sshClient.exec_command(
             'ccqsub -js ' + self.ccqBlender
         )
+
         self.sshClient.exec_command('disown')
         return True
 
@@ -519,7 +701,7 @@ class Communicator():
                         self.ccIndex = abs(self.frameIdx - self.nodeIdx)
                         self.rDone = int((self.ccIndex / self.frameTOT) * 100)
                     self.progressText = ('Progress: ' + str(self.rDone) + '%')
-                    time.sleep(10)
+                    time.sleep(7)
                 except IOError as err:
                     if err.errno == errno.ENOENT:
                         rDone = 0
@@ -591,6 +773,10 @@ class ccModalTimerOperator(bpy.types.Operator):
         ccPassword = context.scene.ccPassword
         ccShareName = context.scene.ccShareName
         ccNumNodes = context.scene.ccNumNodes
+        ccSchedulerType = context.scene.ccSchedulerType
+        ccSpotPrice = context.scene.ccSpotPrice
+        ccSPriceAmount = context.scene.ccSPriceAmount
+        ccInstanceType = context.scene.ccInstanceType
 
         # TODO: valudate the variables here
         # if anything goes wrong return False
@@ -599,6 +785,7 @@ class ccModalTimerOperator(bpy.types.Operator):
         ccURegex = re.fullmatch(r"^[a-z_][a-z0-9_-]*[$]?$", ccUsername)
         ccPRegex = re.fullmatch(r"^[A-Za-z0-9_$-]+$", ccPassword)
         ccEnvCheck = ccShareName
+        ccITCheck = ccInstanceType
 
         if ccSchCheck.path == '':
             ccvalidateMsg = "Invalid URL, it needs an IPv4 or Domain Name"
@@ -637,12 +824,24 @@ class ccModalTimerOperator(bpy.types.Operator):
             print("Error: " + ccvalidateMsg)
             return ccvalidateMsg
 
+        # Conditions allow ONLY if Spot Price is enabled!
+        if(ccSpotPrice is True):
+            if(ccITCheck == ''):
+                ccvalidateMsg = ("Instance type is empty! "
+                                 "You must supply a specific instance type!")
+                print("Error: " + ccvalidateMsg)
+                return ccvalidateMsg
+
         # write valid inputs into the communicator
         communicator.schedulerURI = ccSchedulerURI
         communicator.username = ccUsername
         communicator.password = ccPassword
         communicator.numNodes = ccNumNodes
         communicator.shareName = ccShareName
+        communicator.schedulerType = ccSchedulerType
+        communicator.spotPrice = ccSpotPrice
+        communicator.spAmount = ccSPriceAmount
+        communicator.instanceType = ccInstanceType
 
         return True
 
@@ -669,6 +868,21 @@ class ccModalTimerOperator(bpy.types.Operator):
         return {'CANCELLED'}
 
 
+class ccClipboardOperator(bpy.types.Operator):
+    # Operator that copy path to clipboard
+    bl_idname = "wm.ccclipboard_opt"
+    bl_label = "ccClipboard Operator"
+
+    pathMsg = "WebDav path has been copied to clipboard!"
+
+    def execute(self, context):
+        pyperclip.copy(communicator.webDavURI)
+        self.report({'INFO'}, self.pathMsg)
+        print(self.pathMsg)
+
+        return {'FINISHED'}
+
+
 class ccRenderPanel(bpy.types.Panel):
     '''Creates the ccRender Panel'''
     bl_label = 'ccRender Settings'
@@ -676,28 +890,63 @@ class ccRenderPanel(bpy.types.Panel):
     bl_region_type = 'TOOLS'
     bl_category = 'ccSimple_Render'
 
-    # input variables
+    # Input variables
     # store them on the scene so they can be accessed elsewhere
-    bpy.types.Scene.ccSchedulerURI = bpy.props.StringProperty(
+    blScene = bpy.types.Scene
+
+    blScene.ccSchedulerURI = bpy.props.StringProperty(
         name="CC Scheduler URI"
     )
-    bpy.types.Scene.ccUsername = bpy.props.StringProperty(
+
+    blScene.ccUsername = bpy.props.StringProperty(
         name="CC Username"
     )
-    bpy.types.Scene.ccPassword = bpy.props.StringProperty(
+
+    blScene.ccPassword = bpy.props.StringProperty(
         name="CC Password",
         subtype='PASSWORD'
     )
-    bpy.types.Scene.ccNumNodes = bpy.props.IntProperty(
+
+    blScene.ccNumNodes = bpy.props.IntProperty(
         name="Number of render nodes",
         default=4,
         min=1,
         max=1000,
         step=1
     )
-    bpy.types.Scene.ccShareName = bpy.props.StringProperty(
+
+    blScene.ccShareName = bpy.props.StringProperty(
         name="CC Environment Name",
         default="efsdata"
+    )
+
+    blScene.ccSchedulerType = bpy.props.EnumProperty(
+        name="Scheduler Type",
+        description="Slurm or Torque/Maui",
+        items=[
+            ("SLURM", "Slurm", "Slurm HPC Scheduler"),
+            ("TORQUE", "Torque/Maui", "Torque/Maui HPC Scheduler")
+        ],
+        default="SLURM"
+    )
+
+    blScene.ccSpotPrice = bpy.props.BoolProperty(
+        name="Spot Pricing?",
+        description="Allow Spot Pricing?",
+        default=False
+    )
+
+    blScene.ccSPriceAmount = bpy.props.FloatProperty(
+        name="Target Spot Price",
+        description="Targeted Spot Instance Price",
+        min=0.01,
+        max=1000,
+        step=1,
+        precision=2
+    )
+
+    blScene.ccInstanceType = bpy.props.StringProperty(
+        name="CC Instance Type"
     )
 
     def check(self, context):
@@ -706,24 +955,44 @@ class ccRenderPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         col = layout.column()
+        scn = context.scene
         col.label(text="Custom Interface!")
 
         row = col.row()
-        row.prop(context.scene, "ccSchedulerURI")
+        row.prop(scn, "ccSchedulerURI")
         row = col.row()
-        row.prop(context.scene, "ccUsername")
+        row.prop(scn, "ccUsername")
         row = col.row()
-        row.prop(context.scene, "ccPassword")
+        row.prop(scn, "ccPassword")
         row = col.row()
-        row.prop(context.scene, "ccShareName")
+        row.prop(scn, "ccShareName")
         row = col.row()
-        row.prop(context.scene, "ccNumNodes")
+        row.prop(scn, "ccNumNodes")
         row = col.row()
+        row.prop(scn, "ccSchedulerType", expand=True)
+
+        # Spot price Checkmark 'Disables' Target Amount 
+        # and Instance Type textboxes
+        layout.prop(scn, "ccSpotPrice")
+        col = layout.column()
+        col.active = scn.ccSpotPrice
+        row = col.row()
+        row.prop(scn, "ccSPriceAmount")
+        row = col.row()
+        row.prop(scn, "ccInstanceType")
 
         col = layout.column()
         row = col.row()
 
         row.operator(operator="wm.ccmodal_timer_opt", text="Begin Render")
+
+        col = layout.column()
+        col.label(text="Render Output:")
+        davRow = col.row()
+        davRow.label(text=str(communicator.webDavURI))
+
+        row = col.row()
+        row.operator(operator="wm.ccclipboard_opt", text="Copy Path to Clipboard")
 
 
 class KickoffRender(threading.Thread):
@@ -742,25 +1011,18 @@ class KickoffRender(threading.Thread):
 
 
 def render():
-    # communicator.blendPath = bpy.data.filepath
-    # bpy.ops.file.pack_all()
-
-    # this doesn't hang, and prints while it works
-    # not sure how to report progress
 
     rdr = KickoffRender(communicator=communicator)
     rdr.start()
-
-    # non-threaded version
-    # this hangs while it completed
-    # communicator.render()
 
 
 def register():
     bpy.utils.register_class(ccRenderPanel)
     bpy.utils.register_class(ccModalTimerOperator)
+    bpy.utils.register_class(ccClipboardOperator)
 
 
 def unregister():
     bpy.utils.unregister_class(ccRenderPanel)
     bpy.utils.unregister_class(ccModalTimerOperator)
+    bpy.utils.unregister_class(ccClipboardOperator)

@@ -1,8 +1,7 @@
 ccRender
 ========
 
-An addon for blender that renders a blend file to the cloud. This uses paramiko libraries to SSH into an HPC scheduler node,
-copy over the file, and envoke a job to execute blender rendering all nodes.
+An addon for Blender that renders a blend file to the cloud. This uses paramiko libraries to SSH into an HPC scheduler node, copy over the file, and envoke a job to execute Blender rendering all nodes.
 
 Python requirements
 -------------------
@@ -48,15 +47,15 @@ Python 3.5 can be download and install directly from `Python.org <https://www.py
 
 Pip should be included with Python's installation. If you wish to install it, download `get-pip.py <https://bootstrap.pypa.io/get-pip.py>`_ to a folder on your computer.
 
-Open a command prompt window and navigate to the folder containing ``get-pip.py``.
+Open a command prompt window, preferably as Administrator, and navigate to the folder containing ``get-pip.py``.
 
 Then run ``python get-pip.py``.
 
 
-Paramiko & pyperclip requirements
+Paramiko & Pyperclip requirements
 ---------------------------------
 
-Paramiko and pyperclip has to be included into blender's Python environment. This package includes the installation needed for both of the modules.  Ubuntu's installation differs than Windows in terms of dependencies though the installation is the same. 
+Paramiko and Pyperclip has to be included into Blender's Python environment. This package includes the installation needed for both of the modules.  Ubuntu's installation differs than Windows in terms of dependencies though the installation is the same. 
 
 Ubuntu 14.04 & 16.04
 ^^^^^^^^^^^^^^^^^^^^
@@ -76,7 +75,7 @@ Then use the following commands:
     mkdir /home/<user>/blenderscripts/startup
     pip3 install --target=/home/<user>/blenderscripts/modules/ ccRender
 
-If you wish to install them through Github, the process is similar. You will need the following dependency:
+If you wish to install them through Github, the process is similar. You will need to install the following dependency:
 ::
 
     git-core
@@ -89,15 +88,15 @@ Then use the following command after creating the folders :
 
 If you are using Ubuntu 14.04, the process is the same except use pip3.5 instead of pip3 to ensure that the package is installing to the right Python version.
 
-Open blender and set the value in ``preferences -> file -> scripts`` to
+Open Blender and set the value in ``preferences -> file -> scripts`` to
 
 ::
 
     /home/<user>/blenderscripts
 
-and restart blender.
+and restart Blender.
 
-An additional folder, called ``ccrender`` will be installed to the same location as paramiko and pyperclip. This can be moved to the addons folder but it's optional. To install it onto blender, install the Python file in ``preferences -> addon -> install to file`` and find the addon in:
+An additional folder, called ``ccrender`` will be installed to the same location as Paramiko and Pyperclip. This can be moved to the addons folder but it's optional. To install it onto Blender, install the Python file in ``preferences -> addon -> install to file`` and find the addon in:
 
 ::
 
@@ -132,14 +131,14 @@ Then open Blender and set the value in ``preferences -> file -> scripts`` to
 
     C:\Users\<username>\Documents\blenderscripts
 
-and restart blender.
+and restart Blender.
 
 The process is the same for installation through PyPi. Use this command in the command panel as Administrator:
 ::
 
     pip install --target=C:\Users\<username>\Documents\blenderscripts\modules\ ccRender
 
-An additional folder, called ``ccrender`` will be installed to the same location as paramiko and pyperclip. This can be moved to the addons folder but it's optional. To install it onto blender, install the Python file in ``preferences -> addon -> install to file``  and find the addon in:
+An additional folder, called ``ccrender`` will be installed to the same location as Paramiko and Pyperclip. This can be moved to the addons folder but it's optional. To install it onto Blender, install the Python file in ``preferences -> addon -> install to file``  and find the addon in:
 
 ::
 

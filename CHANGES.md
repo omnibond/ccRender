@@ -3,7 +3,7 @@
 ## 0.11.0 (2017-9-17)
 - Added Image Sequence feature to UI.
 - User will now be able to allow or disable Image Sequencing. By defualt, Image Sequencing is enabled and after rendering, the rendered images are gathered and stitched togeter into a video of the user's choice.
--The following video formats are now available: MP4, MOV, MPG, & AVI
+-The following video formats are now available: MP4, MOV, MPG, & AVI.
 -Updated script to suit the webdav link to the video output (if Image Sequencing is enabled) or the rendered frames folder.
 -Updated Reademe.rst to include an alternative installation for Windows 10 Users who have Windows Subsystem for Linux enabled. 
 

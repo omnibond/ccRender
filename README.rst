@@ -146,10 +146,13 @@ An additional folder, called ``ccrender`` will be installed to the same location
 
 Then enable the addon and save user settings.
 
-Windows 10 users that have Linux Bash Shell enabled, can follow the instructions listed for Ubuntu. The process is similar to those who use Ubuntu with the exception of the directory of the blenderscripts folder. This pip installation of ccRender below is an example.:
+Windows 10
+----------
+
+Windows 10 users that have Linux Bash Shell enabled, can follow the instructions listed for Ubuntu. The pip installation process is similar, make note towards the directory path such as the example below:
 
 ::
 
     pip install --target=/mnt/c/Users/<username>/Documents/blenderscripts/modules/ ccRender
 
-The same goes with installing the Python file into Blender as with the other installations.
+Those who wish to install the addon through Github instead of PyPi, will need to make sure that Git is installed. Installing the addon onto Blender is the same as the other Windows installations.

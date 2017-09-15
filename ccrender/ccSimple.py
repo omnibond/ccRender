@@ -19,8 +19,8 @@ from scp import SCPClient
 bl_info = {
     "name": "CC Render",
     "author": "Omnibond",
-    "version": (0, 10, 0),
-    "blender": (2, 78, 0),
+    "version": (0, 11, 0),
+    "blender": (2, 79, 0),
     "location": "View3D > Tools > ccSimple_Render",
     "description": "Cloudy Cluster Simple Render",
     "warning": "",
@@ -33,6 +33,8 @@ class Communicator():
     def __init__(self):
         self._schedulerURI = None
         self._webDavURI = None
+        self._vidDavURI = None
+        self._imgDavURI = None
         self._username = None
         self._password = None
         self._shareName = None
@@ -41,6 +43,8 @@ class Communicator():
         self._spotPrice = False
         self._spAmount = 0.00
         self._instanceType = None
+        self._videoOption = False
+        self._videoType = None
         self._frameIdx = 0
         self._frameTOT = 0
         self._numPluses = 0
@@ -55,6 +59,10 @@ class Communicator():
         self._blendDone = None
         self._destPath = None
         self._destName = None
+        self._rendDest = None
+        self._vidDest = None
+        self._blendVid = None
+        self._imgSeq = None
         self._ccqBlender = None
         self._blenderJS = None
         self._progressText = "initializing..."
@@ -82,6 +90,22 @@ class Communicator():
     @webDavURI.setter
     def webDavURI(self, value):
         self._webDavURI = value
+
+    @property
+    def vidDavURI(self):
+        return self._vidDavURI
+
+    @vidDavURI.setter
+    def vidDavURI(self, value):
+        self._vidDavURI = value
+
+    @property
+    def imgDavURI(self):
+        return self._imgDavURI
+
+    @imgDavURI.setter
+    def imgDavURI(self, value):
+        self._imgDavURI = value
 
     @property
     def username(self):
@@ -146,6 +170,22 @@ class Communicator():
     @instanceType.setter
     def instanceType(self, value):
         self._instanceType = value
+
+    @property
+    def videoOption(self):
+        return self._videoOption
+
+    @videoOption.setter
+    def videoOption(self, value):
+        self._videoOption = value
+
+    @property
+    def videoType(self):
+        return self._videoType
+
+    @videoType.setter
+    def videoType(self, value):
+        self._videoType = value
 
     @property
     def frameIdx(self):
@@ -258,6 +298,38 @@ class Communicator():
     @destName.setter
     def destName(self, value):
         self._destName = value
+
+    @property
+    def rendDest(self):
+        return self._rendDest
+
+    @rendDest.setter
+    def rendDest(self, value):
+        self._rendDest = value
+
+    @property
+    def vidDest(self):
+        return self._vidDest
+
+    @vidDest.setter
+    def vidDest(self, value):
+        self._vidDest = value
+
+    @property
+    def blendVid(self):
+        return self._blendVid
+
+    @blendVid.setter
+    def blendVid(self, value):
+        self._blendVid = value
+
+    @property
+    def imgSeq(self):
+        return self._imgSeq
+
+    @imgSeq.setter
+    def imgSeq(self, value):
+        self._imgSeq = value
 
     @property
     def ccqBlender(self):
@@ -375,24 +447,29 @@ class Communicator():
         if(sendResult is False):
             self.finished = True
             return False
-        self.progressText = "done."
 
         self.progressText = "Rendering blend file...."
         rendResult = self.blendRender()
         if(rendResult is False):
             self.finished = True
             return False
-        self.progressText = "done."
 
         self.progressText = "Creating Resourses...."
         blendprog = self.progressRender()
         if(blendprog is False):
             self.finished = True
             return False
-        self.progressText = "done."
 
         self.progressText = "Rendering complete!"
-        print("Render Output: " + self.webDavURI)
+
+        if(self.videoOption is True):
+            self.progressText = "Converting frame images into video..."
+            videoprog = self.ImageSequence()
+            if(videoprog is False):
+                self.finished = True
+                return False
+
+        self.progressText = "Convertion complete!"
 
         self.disconnect()
 
@@ -433,31 +510,42 @@ class Communicator():
 
         self.blendDest = self.destPath + self.destName + '/'
         self.rendDest = self.blendDest + 'frames/'
+        self.vidDest = self.blendDest + 'video/'
         self.rBlend = self.blendDest + self.blendName
-        self.webDavURI = "https://" + self.schedulerURI + self.rendDest
+        self.imgDavURI = "https://" + self.schedulerURI + self.rendDest
+        self.vidDavURI = "https://" + self.schedulerURI + self.vidDest
+
+        # Set-up the WebDav link based on if the user's reponse
+        # for video option.
+
+        if(self.videoOption is True):
+            self.webDavURI = self.vidDavURI
+        else:
+            self.webDavURI = self.imgDavURI
 
         time.sleep(2)
 
         # Checks the path of the blend file and tells the user to save
         # the blend file first. This only happens when user is making from
         # brand new blend file.
+
         if not self.blendPath:
             print("Error: Save file first")
             self.progressText = 'Error: Save file first!'
             return False
 
-        # Ensures render overwrite remains false and 
-        # saves blend file before sending.
+        # Changes overwrite to false and saves blend file before sending.
         bpy.context.scene.render.use_overwrite = False
         bpy.ops.wm.save_mainfile()
 
         return True
 
     def ccqSSetup(self):
-            # Template script for Slurm HPC Scheduler to be added to the cluster
-            # Local placeholder for blender job script
+            # Template script for Slurm HPC Scheduler to be added to the cluster.
+            # Local placeholder for blender job script.
+
             self.blenderJS = self.blendPath + "/blender.sh"
-            self.ccqBlender = self.destPath + 'blender/2.76/blender.sh'
+            self.ccqBlender = self.blendDest + 'blender.sh'
 
             # Converts float into a decimal.
             # Round to two decimal places.
@@ -528,18 +616,20 @@ class Communicator():
                     "sBlendFile": self.blendName
                 }
 
-            # "newline='\n' "- needed for Windows users to make a job script
+            # "newline='\n' " is needed for Windows users to make a job script
             # the same way as for Unix users.
+
             with open(self.blenderJS, 'w', newline="\n") as blendSlurm:
                 blendSlurm.write(slurmTemp.format(**slurmContext))
 
             return True
 
     def ccqTSetup(self):
-            # Template script for Torque/Maui HPC Scheduler to be added to the cluster
-            # Local placeholder for blender job script
+            # Template script for Torque/Maui HPC Scheduler to be added to the cluster.
+            # Local placeholder for blender job script.
+
             self.blenderJS = self.blendPath + "/blender.sh"
-            self.ccqBlender = self.destPath + 'blender/2.76/blender.sh'
+            self.ccqBlender = self.blendDest + 'blender.sh'
 
             # Converts float into a decimal.
             # Round to two decimal places.
@@ -618,17 +708,28 @@ class Communicator():
             return True
 
     def sendBlend(self):
-        # Makes a project folder
+        # Makes a project folder.
+
         self.progressText = 'trying to mkdir ' + self.destPath + self.destName
         self.sshClient.exec_command('mkdir ' + self.destPath + self.destName)
 
-        # Makes a frames folder
+        # Makes a frames folder.
+
         self.progressText = (
             'Trying to mkdir ' + self.destPath + self.destName + '/frames'
         )
+
         self.sshClient.exec_command(
             'mkdir ' + self.blendDest + 'frames'
         )
+
+        if(self.videoOption is True):
+            self.progressText = (
+                'Trying to mkdir ' + self.blendDest + 'video'
+            )
+            self.sshClient.exec_command(
+                'mkdir ' + self.blendDest + 'video'
+            )
 
         time.sleep(2)
 
@@ -640,23 +741,31 @@ class Communicator():
             bpy.data.filepath, self.blendDest + self.blendName
         )
 
-        # Sending blender job script to blender folder in the instance.
+        self.sshClient.exec_command(
+            "rm -f " + self.ccqBlender
+        )
+
         self.progressText = (
             'Copying job script to scheduler...'
         )
+
         self.scpClient.put(
             self.blenderJS, self.ccqBlender
         )
 
-        # Deleting local Blender JS copy
+        # Deleting local Blender JS copy.
         os.remove(self.blenderJS)
 
         return True
 
     def blendRender(self):
-        # blendDone.txt outputs a symbol '+' to indicate a completed rendering
-        # job in a node. Each additional '+' in the file indicates the number
-        # of nodes Blender has completed rendering in that same job.
+        '''
+
+        blendOutput.txt includes detail rendering process, while
+        blendDone.txt outputs a symbol '+' to indicate the rendering job
+        is done. Each additional '+' in the blendDone.txt is the number of
+        jobs blender has done and completed.
+        '''
 
         self.sshClient.exec_command(
             "rm -f " + self.blendDest + "blendDone.txt &&"
@@ -671,7 +780,8 @@ class Communicator():
         return True
 
     def progressRender(self):
-        # Displays progress for rendering
+        # Displays progress for rendering.
+
         self.sftpClient = self.sshClient.open_sftp()
         self.ccFRMStart = bpy.context.scene.frame_start
         self.ccFRMEnd = bpy.context.scene.frame_end
@@ -701,7 +811,7 @@ class Communicator():
                         self.ccIndex = abs(self.frameIdx - self.nodeIdx)
                         self.rDone = int((self.ccIndex / self.frameTOT) * 100)
                     self.progressText = ('Progress: ' + str(self.rDone) + '%')
-                    time.sleep(7)
+                    time.sleep(10)
                 except IOError as err:
                     if err.errno == errno.ENOENT:
                         rDone = 0
@@ -710,6 +820,39 @@ class Communicator():
                         time.sleep(7)
             else:
                 self.rProgress = True
+
+        return True
+
+    def ImageSequence(self):
+        # Makes a video from a set of images.
+
+        if(self.videoType == "MP4"):
+            self.blendVid = self.destName + ".mp4"
+
+        if(self.videoType == "MOV"):
+            self.blendVid = self.destName + ".mov"
+
+        if(self.videoType == "MPG"):
+            self.blendVid = self.destName + ".mpg"
+
+        if(self.videoType == "AVI"):
+            self.blendVid = self.destName + ".avi"
+
+        self.imgSeq = (
+            "ffmpeg -i " + self.rendDest + "frame_%d.png " + self.vidDest + self.blendVid
+        )
+
+        # Time delay to ensure ffmpeg would not overload.
+        time.sleep(15)
+
+        self.progressText = (
+            'Saving video file to ' + self.vidDest + self.blendVid
+        )
+        stdin, stdout, stderr = self.sshClient.exec_command(
+            self.imgSeq
+        )
+
+        self.imgSeqStderr = stderr.readlines()
 
         return True
 
@@ -723,7 +866,8 @@ communicator = Communicator()
 
 
 class ccModalTimerOperator(bpy.types.Operator):
-    # Operator which runs its self from a ccModalTimerOperator
+    # Operator which runs its self from a ccModalTimerOperator.
+
     bl_idname = "wm.ccmodal_timer_opt"
     bl_label = "ccModal Timer Operator"
     anyKeyEventTypes = {'LEFTMOUSE', 'RIGHTMOUSE', 'ESC', 'SPACE', 'OSKEY',
@@ -755,7 +899,6 @@ class ccModalTimerOperator(bpy.types.Operator):
             return {'FINISHED'}
 
         if communicator.finished is True:
-            # finished ok.
             print("finished is true.")
             self.cancel(context)
             return {'FINISHED'}
@@ -777,9 +920,11 @@ class ccModalTimerOperator(bpy.types.Operator):
         ccSpotPrice = context.scene.ccSpotPrice
         ccSPriceAmount = context.scene.ccSPriceAmount
         ccInstanceType = context.scene.ccInstanceType
+        ccVideoOption = context.scene.ccVideoOption
+        ccVideoType = context.scene.ccVideoType
 
         # TODO: valudate the variables here
-        # if anything goes wrong return False
+        # if anything goes wrong return False.
 
         ccSchCheck = urlparse(ccSchedulerURI)
         ccURegex = re.fullmatch(r"^[a-z_][a-z0-9_-]*[$]?$", ccUsername)
@@ -792,7 +937,7 @@ class ccModalTimerOperator(bpy.types.Operator):
             print("Error: " + ccvalidateMsg)
             return ccvalidateMsg
 
-        # Username follows basic gnu/linux name rules
+        # Username follows basic gnu/linux name rules.
         if ccURegex is None:
             ccvalidateMsg = ("Invalid Username. Username must be in letters, "
                              "numbers, '_', '-', or '$'!")
@@ -805,7 +950,7 @@ class ccModalTimerOperator(bpy.types.Operator):
             print("Error: " + ccvalidateMsg)
             return ccvalidateMsg
 
-        # Password follows the same rules as username
+        # Password follows the same rules as username.
         if ccPRegex is None:
             ccvalidateMsg = ("Invalid Password! Password must be in letters, "
                              "numbers, '_', '-', or '$'!")
@@ -824,7 +969,7 @@ class ccModalTimerOperator(bpy.types.Operator):
             print("Error: " + ccvalidateMsg)
             return ccvalidateMsg
 
-        # Conditions allow ONLY if Spot Price is enabled!
+        # Conditions allow ONLY if Spot Price is enabled.
         if(ccSpotPrice is True):
             if(ccITCheck == ''):
                 ccvalidateMsg = ("Instance type is empty! "
@@ -832,7 +977,7 @@ class ccModalTimerOperator(bpy.types.Operator):
                 print("Error: " + ccvalidateMsg)
                 return ccvalidateMsg
 
-        # write valid inputs into the communicator
+        # Write valid inputs into the communicator.
         communicator.schedulerURI = ccSchedulerURI
         communicator.username = ccUsername
         communicator.password = ccPassword
@@ -842,6 +987,8 @@ class ccModalTimerOperator(bpy.types.Operator):
         communicator.spotPrice = ccSpotPrice
         communicator.spAmount = ccSPriceAmount
         communicator.instanceType = ccInstanceType
+        communicator.videoOption = ccVideoOption
+        communicator.videoType = ccVideoType
 
         return True
 
@@ -869,7 +1016,7 @@ class ccModalTimerOperator(bpy.types.Operator):
 
 
 class ccClipboardOperator(bpy.types.Operator):
-    # Operator that copy path to clipboard
+    # Operator that copy path to clipboard.
     bl_idname = "wm.ccclipboard_opt"
     bl_label = "ccClipboard Operator"
 
@@ -884,14 +1031,12 @@ class ccClipboardOperator(bpy.types.Operator):
 
 
 class ccRenderPanel(bpy.types.Panel):
-    '''Creates the ccRender Panel'''
+    # Creates the ccRender Panel.
     bl_label = 'ccRender Settings'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
     bl_category = 'ccSimple_Render'
 
-    # Input variables
-    # store them on the scene so they can be accessed elsewhere
     blScene = bpy.types.Scene
 
     blScene.ccSchedulerURI = bpy.props.StringProperty(
@@ -949,6 +1094,26 @@ class ccRenderPanel(bpy.types.Panel):
         name="CC Instance Type"
     )
 
+    blScene.ccVideoOption = bpy.props.BoolProperty(
+        name="Video Output",
+        description="Frame sequence images into a video (disable this if you "
+        "wish to retrieve the image output ONLY.",
+        default=True
+    )
+
+    blScene.ccVideoType = bpy.props.EnumProperty(
+        name="Video format",
+        description="Video Output format",
+        items=[
+            ("MP4", "mp4", ".mp4 format"),
+            ("MOV", "mov", ".mov format"),
+            ("MPG", "mpg", ".mpg format"),
+            ("AVI", "avi", ".avi format")
+        ],
+        default="MP4"
+
+    )
+
     def check(self, context):
         return communicator.progress
 
@@ -971,8 +1136,7 @@ class ccRenderPanel(bpy.types.Panel):
         row = col.row()
         row.prop(scn, "ccSchedulerType", expand=True)
 
-        # Spot price Checkmark 'Disables' Target Amount 
-        # and Instance Type textboxes
+        # Spot price Checkmark 'Disables' Target Amount textbox.
         layout.prop(scn, "ccSpotPrice")
         col = layout.column()
         col.active = scn.ccSpotPrice
@@ -980,6 +1144,21 @@ class ccRenderPanel(bpy.types.Panel):
         row.prop(scn, "ccSPriceAmount")
         row = col.row()
         row.prop(scn, "ccInstanceType")
+
+        col = layout.column()
+        row = col.row()
+
+        col = layout.column()
+        col.label(text="Video Settings")
+
+        # Video checkmark decides on enabling/disableing
+        # video to images feature.
+
+        layout.prop(scn, "ccVideoOption")
+        col = layout.column()
+        col.active = scn.ccVideoOption
+        vidRow = col.row()
+        vidRow.prop(scn, "ccVideoType")
 
         col = layout.column()
         row = col.row()

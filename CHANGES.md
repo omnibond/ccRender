@@ -1,6 +1,13 @@
 # Changelog
 
-## 0.10.0 (2017-7-xx)
+## 0.11.0 (2017-9-17)
+- Added Image Sequence feature to UI.
+- User will now be able to allow or disable Image Sequencing. By defualt, Image Sequencing is enabled and after rendering, the rendered images are gathered and sitched togeter into a video of the user's choice.
+-The following video formats are now available: MP4, MOV, MPG, & AVI
+-Updated script to suit the webdav link to the video output (if Image Sequencing is enabled) or the rendered frames folder.
+-Updated Reademe.rst to include an alternative installation for Windows 10 Users who have Windows Subsystem for Linux enabled. 
+
+## 0.10.0 (2017-7-19)
 - Added Spot Instance feature to UI.
 - User will now be able to choose if they want spot instance nor not. If they do, they must supply the target amount, and the instance type before they start rendering.
 - Updated script to suit both spot instance and non-spot instance

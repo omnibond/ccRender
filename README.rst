@@ -142,6 +142,14 @@ An additional folder, called ``ccrender`` will be installed to the same location
 
 ::
 
-    C:\Users\username\Documents\blenderscripts\addons\ccrender\ccSimple.py
+    C:\Users\<username>\Documents\blenderscripts\addons\ccrender\ccSimple.py
 
 Then enable the addon and save user settings.
+
+Windows 10 users that have Linux Bash Shell enabled, can follow the instructions listed for Ubuntu. The process is similar to those who use Ubuntu with the exception of the directory of the blenderscripts folder. This pip installation of ccRender below is an example.:
+
+::
+
+    pip install --target=/mnt/c/Users/<username>/Documents/blenderscripts/modules/ ccRender
+
+The same goes with installing the Python file into Blender as with the other installations.

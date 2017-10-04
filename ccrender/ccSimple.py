@@ -816,7 +816,7 @@ class Communicator():
                     if err.errno == errno.ENOENT:
                         rDone = 0
                         self.progressText = ('Progress: ' + str(self.rDone) + '%')
-                        print('Empty folder....please wait')
+                        print('Creating Resourses....please wait')
                         time.sleep(7)
             else:
                 self.rProgress = True
@@ -977,6 +977,16 @@ class ccModalTimerOperator(bpy.types.Operator):
                 print("Error: " + ccvalidateMsg)
                 return ccvalidateMsg
 
+        # Conditions if user didn't select a video format.
+        # This only happens IF Video Output is enabled.
+        if(ccVideoOption is True):
+            if(ccVideoType == "ORANGE"):
+                ccvalidateMsg = (
+                    "You must select the video format type in order "
+                    "to use the video convertion feature!")
+                print("Error: " + ccvalidateMsg)
+                return ccvalidateMsg
+
         # Write valid inputs into the communicator.
         communicator.schedulerURI = ccSchedulerURI
         communicator.username = ccUsername
@@ -1102,15 +1112,20 @@ class ccRenderPanel(bpy.types.Panel):
     )
 
     blScene.ccVideoType = bpy.props.EnumProperty(
-        name="Video format",
-        description="Video Output format",
+        name="Video Format",
+        description="Video File Format",
         items=[
+            # "ORANGE" selection helps User to ensure the video
+            # format is selected.
+            # Process seems to ignore this if User doesn't asign
+            # a video output format.
+            ("ORANGE", "Select Format", "Select Video Format"),
             ("MP4", "mp4", ".mp4 format"),
             ("MOV", "mov", ".mov format"),
             ("MPG", "mpg", ".mpg format"),
             ("AVI", "avi", ".avi format")
         ],
-        default="MP4"
+        default="ORANGE"
 
     )
 

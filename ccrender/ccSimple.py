@@ -810,7 +810,11 @@ class Communicator():
                         self.frameIdx = int(index + 1)
                         self.ccIndex = abs(self.frameIdx - self.nodeIdx)
                         self.rDone = int((self.ccIndex / self.frameTOT) * 100)
-                    self.progressText = ('Progress: ' + str(self.rDone) + '%')
+                    if self.rDone > 100:
+                        self.progressText = ('Progress: 100%')
+                        time.sleep(10)
+                    else:
+                        self.progressText = ('Progress: ' + str(self.rDone) + '%')
                     time.sleep(10)
                 except IOError as err:
                     if err.errno == errno.ENOENT:

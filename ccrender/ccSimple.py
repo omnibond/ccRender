@@ -977,16 +977,6 @@ class ccModalTimerOperator(bpy.types.Operator):
                 print("Error: " + ccvalidateMsg)
                 return ccvalidateMsg
 
-        # Conditions if user didn't select a video format.
-        # This only happens IF Video Output is enabled.
-        if(ccVideoOption is True):
-            if(ccVideoType == "ORANGE"):
-                ccvalidateMsg = (
-                    "You must select the video format type in order "
-                    "to use the video convertion feature!")
-                print("Error: " + ccvalidateMsg)
-                return ccvalidateMsg
-
         # Write valid inputs into the communicator.
         communicator.schedulerURI = ccSchedulerURI
         communicator.username = ccUsername
@@ -1180,7 +1170,6 @@ class ccRenderVairables(bpy.types.PropertyGroup):
             # format is selected.
             # Process seems to ignore this if User doesn't asign
             # a video output format.
-            ("ORANGE", "Select Format", "Select Video Format"),
             ("MP4", "mp4", ".mp4 format"),
             ("MOV", "mov", ".mov format"),
             ("MPG", "mpg", ".mpg format"),

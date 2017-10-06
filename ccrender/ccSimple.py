@@ -1047,6 +1047,67 @@ class ccRenderPanel(bpy.types.Panel):
     bl_region_type = 'TOOLS'
     bl_category = 'ccSimple_Render'
 
+    def check(self, context):
+        return communicator.progress
+
+    def draw(self, context):
+        layout = self.layout
+        col = layout.column()
+        scn = context.scene
+        col.label(text="Custom Interface!")
+
+        row = col.row()
+        row.prop(scn, "ccSchedulerURI")
+        row = col.row()
+        row.prop(scn, "ccUsername")
+        row = col.row()
+        row.prop(scn, "ccPassword")
+        row = col.row()
+        row.prop(scn, "ccShareName")
+        row = col.row()
+        row.prop(scn, "ccNumNodes")
+        row = col.row()
+        row.prop(scn, "ccSchedulerType", expand=True)
+
+        # Spot price Checkmark 'Disables' Target Amount textbox.
+        layout.prop(scn, "ccSpotPrice")
+        col = layout.column()
+        col.active = scn.ccSpotPrice
+        row = col.row()
+        row.prop(scn, "ccSPriceAmount")
+        row = col.row()
+        row.prop(scn, "ccInstanceType")
+
+        col = layout.column()
+        row = col.row()
+
+        col = layout.column()
+        col.label(text="Video Settings")
+
+        # Video checkmark decides on enabling/disableing
+        # video to images feature.
+
+        layout.prop(scn, "ccVideoOption")
+        col = layout.column()
+        col.active = scn.ccVideoOption
+        vidRow = col.row()
+        vidRow.prop(scn, "ccVideoType")
+
+        col = layout.column()
+        row = col.row()
+
+        row.operator(operator="wm.ccmodal_timer_opt", text="Begin Render")
+
+        col = layout.column()
+        col.label(text="Render Output:")
+        davRow = col.row()
+        davRow.label(text=str(communicator.webDavURI))
+
+        row = col.row()
+        row.operator(operator="wm.ccclipboard_opt", text="Copy Path to Clipboard")
+
+
+class ccRenderVairables(bpy.types.PropertyGroup):
     blScene = bpy.types.Scene
 
     blScene.ccSchedulerURI = bpy.props.StringProperty(
@@ -1125,68 +1186,8 @@ class ccRenderPanel(bpy.types.Panel):
             ("MPG", "mpg", ".mpg format"),
             ("AVI", "avi", ".avi format")
         ],
-        default="ORANGE"
-
+        default="MP4"
     )
-
-    def check(self, context):
-        return communicator.progress
-
-    def draw(self, context):
-        layout = self.layout
-        col = layout.column()
-        scn = context.scene
-        col.label(text="Custom Interface!")
-
-        row = col.row()
-        row.prop(scn, "ccSchedulerURI")
-        row = col.row()
-        row.prop(scn, "ccUsername")
-        row = col.row()
-        row.prop(scn, "ccPassword")
-        row = col.row()
-        row.prop(scn, "ccShareName")
-        row = col.row()
-        row.prop(scn, "ccNumNodes")
-        row = col.row()
-        row.prop(scn, "ccSchedulerType", expand=True)
-
-        # Spot price Checkmark 'Disables' Target Amount textbox.
-        layout.prop(scn, "ccSpotPrice")
-        col = layout.column()
-        col.active = scn.ccSpotPrice
-        row = col.row()
-        row.prop(scn, "ccSPriceAmount")
-        row = col.row()
-        row.prop(scn, "ccInstanceType")
-
-        col = layout.column()
-        row = col.row()
-
-        col = layout.column()
-        col.label(text="Video Settings")
-
-        # Video checkmark decides on enabling/disableing
-        # video to images feature.
-
-        layout.prop(scn, "ccVideoOption")
-        col = layout.column()
-        col.active = scn.ccVideoOption
-        vidRow = col.row()
-        vidRow.prop(scn, "ccVideoType")
-
-        col = layout.column()
-        row = col.row()
-
-        row.operator(operator="wm.ccmodal_timer_opt", text="Begin Render")
-
-        col = layout.column()
-        col.label(text="Render Output:")
-        davRow = col.row()
-        davRow.label(text=str(communicator.webDavURI))
-
-        row = col.row()
-        row.operator(operator="wm.ccclipboard_opt", text="Copy Path to Clipboard")
 
 
 class KickoffRender(threading.Thread):
@@ -1212,11 +1213,16 @@ def render():
 
 def register():
     bpy.utils.register_class(ccRenderPanel)
+    bpy.utils.register_class(ccRenderVairables)
     bpy.utils.register_class(ccModalTimerOperator)
     bpy.utils.register_class(ccClipboardOperator)
 
 
 def unregister():
     bpy.utils.unregister_class(ccRenderPanel)
+    bpy.utils.register_class(ccRenderVairables)
     bpy.utils.unregister_class(ccModalTimerOperator)
     bpy.utils.unregister_class(ccClipboardOperator)
+
+if __name__ == "__main__":
+    register()

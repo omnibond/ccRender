@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.11.1 (2017-10-15)
+- Fixed issue that prevents executing the addon multiple times without closing and reopening Blender.
+- Repeated progress now show correct percentage while CCQ script is executing.
+
 ## 0.11.0 (2017-9-17)
 - Added Image Sequence feature to UI.
 - User will now be able to allow or disable Image Sequencing. By defualt, Image Sequencing is enabled and after rendering, the rendered images are gathered and stitched togeter into a video of the user's choice.

@@ -19,8 +19,8 @@ from scp import SCPClient
 bl_info = {
     "name": "CC Render",
     "author": "Omnibond",
-    "version": (0, 11, 0),
-    "blender": (2, 79, 0),
+    "version": (0, 11, 1),
+    "blender": (2, 78, 0),
     "location": "View3D > Tools > ccSimple_Render",
     "description": "Cloudy Cluster Simple Render",
     "warning": "",
@@ -476,8 +476,8 @@ class Communicator():
         self.finished = True
 
     def connect(self):
-        self.sshClient.load_system_host_keys()
         self.sshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        self.sshClient.load_system_host_keys()
 
         try:
             self.progressText = 'Connecting to scheduler...'
@@ -768,8 +768,11 @@ class Communicator():
         '''
 
         self.sshClient.exec_command(
-            "rm -f " + self.blendDest + "blendDone.txt &&"
-            " touch " + self.blendDest + "blendDone.txt"
+            "rm -f " + self.blendDest + "blendDone.txt"
+        )
+
+        self.sshClient.exec_command(
+            "touch " + self.blendDest + "blendDone.txt"
         )
 
         self.sshClient.exec_command(
@@ -786,6 +789,9 @@ class Communicator():
         self.ccFRMStart = bpy.context.scene.frame_start
         self.ccFRMEnd = bpy.context.scene.frame_end
         self.frameTOT = (self.ccFRMEnd - self.ccFRMStart) + 1
+
+        if self.rProgress is True:
+            self.rProgress = False
 
         while self.rProgress is False:
             stdin, stdout, stderr = self.sshClient.exec_command(
@@ -818,12 +824,13 @@ class Communicator():
                     time.sleep(10)
                 except IOError as err:
                     if err.errno == errno.ENOENT:
-                        rDone = 0
+                        self.rDone = 0
                         self.progressText = ('Progress: ' + str(self.rDone) + '%')
                         print('Creating Resourses....please wait')
                         time.sleep(7)
             else:
                 self.rProgress = True
+                self.rDone = 0
 
         return True
 
@@ -861,10 +868,7 @@ class Communicator():
         return True
 
     def disconnect(self):
-        if self.sshClient is not None:
-            self.sshClient.close()
-            self.sshClient = None
-
+        self.sshClient.close()
 
 communicator = Communicator()
 

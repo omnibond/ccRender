@@ -759,17 +759,12 @@ class Communicator():
         return True
 
     def blendRender(self):
-        '''
-
-        blendOutput.txt includes detail rendering process, while
-        blendDone.txt outputs a symbol '+' to indicate the rendering job
-        is done. Each additional '+' in the blendDone.txt is the number of
-        jobs blender has done and completed.
-        '''
 
         self.sshClient.exec_command(
             "rm -f " + self.blendDest + "blendDone.txt"
         )
+
+        time.sleep(3)
 
         self.sshClient.exec_command(
             "touch " + self.blendDest + "blendDone.txt"
@@ -779,7 +774,7 @@ class Communicator():
             'ccqsub -js ' + self.ccqBlender
         )
 
-        self.sshClient.exec_command('disown')
+        # self.sshClient.exec_command('disown')
         return True
 
     def progressRender(self):

@@ -79,6 +79,7 @@ Install the following dependencies first (replace python3.x with whatever versio
 Create a script folder for the modules and addons, blenderscripts for example. Inside the <blenderscripts> folder, create the following folders:
 
 ::
+
     addons
     modules
     startup
@@ -86,6 +87,7 @@ Create a script folder for the modules and addons, blenderscripts for example. I
 Then go back to the terminal and use the following command to install the modules to the script modules folder:
 
 ::
+
     pip3 install --target=/home/<user>/<blenderscripts>/modules/ ccRender
 
 
@@ -97,11 +99,13 @@ Ubuntu 14.04 & 16.04 or later (Github installation)
 If you wish to install the modules through Github, the process is similar. Install the same dependencies as it is for pip, but include the following dependency:
 
 ::
+
     git-core
 
 Then use the following command after creating the folders (pip3.x instead of pip3 if using Ubuntu 14.04 or later version with different environment):
 
 ::
+
     pip3 install --target=/home/<user>/blenderscripts/modules/ git+https://github.com/omnibond/ccRender
 
 Windows (Github installation)
@@ -131,6 +135,7 @@ Windows (PyPi installation)
 If you wish to install the modules using PyPi, the process is the same. use this command in the command panel as Administrator:
 
 ::
+
     pip install --target=C:\Users\<username>\Documents\blenderscripts\modules\ ccRender
 
 

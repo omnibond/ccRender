@@ -19,9 +19,9 @@ from scp import SCPClient
 bl_info = {
     "name": "CC Render",
     "author": "Omnibond",
-    "version": (0, 11, 1),
-    "blender": (2, 78, 0),
-    "location": "View3D > Tools > ccSimple_Render",
+    "version": (1, 0, 1),
+    "blender": (2, 80, 0),
+    "location": "View3D > Tools (Sidebar) > ccSimple_Render",
     "description": "Cloudy Cluster Simple Render",
     "warning": "",
     "wiki_url": "",
@@ -1036,8 +1036,9 @@ class ccClipboardOperator(bpy.types.Operator):
 class ccRenderPanel(bpy.types.Panel):
     # Creates the ccRender Panel.
     bl_label = 'ccRender Settings'
+    bl_idname = "CC_RENDER_layout"
     bl_space_type = 'VIEW_3D'
-    bl_region_type = 'TOOLS'
+    bl_region_type = 'TOOLS' if bpy.app.version < (2, 80) else 'UI'
     bl_category = 'ccSimple_Render'
 
     def check(self, context):
@@ -1203,18 +1204,45 @@ def render():
     rdr.start()
 
 
+def make_annotations(cls):
+    """Converts class fields to annotations if running with Blender 2.8+"""
+    if bpy.app.version < (2, 80):
+        return cls
+    bl_props = {k: v for k, v in cls.__dict__.items() if isinstance(v, tuple)}
+    if bl_props:
+        if '__annotations__' not in cls.__dict__:
+            setattr(cls, '__annotations__', {})
+        annotations = cls.__dict__['__annotations__']
+        for k, v in bl_props.items():
+            annotations[k] = v
+            delattr(cls, k)
+    return cls
+
+classes = (
+    ccRenderPanel,
+    ccRenderVairables,
+    ccModalTimerOperator,
+    ccClipboardOperator,
+)
+
 def register():
-    bpy.utils.register_class(ccRenderPanel)
-    bpy.utils.register_class(ccRenderVairables)
-    bpy.utils.register_class(ccModalTimerOperator)
-    bpy.utils.register_class(ccClipboardOperator)
+    # bpy.utils.register_class(ccRenderPanel)
+    # bpy.utils.register_class(ccRenderVairables)
+    # bpy.utils.register_class(ccModalTimerOperator)
+    # bpy.utils.register_class(ccClipboardOperator)
+    for cls in classes:
+        make_annotations(cls)
+        bpy.utils.register_class(cls)
 
 
 def unregister():
-    bpy.utils.unregister_class(ccRenderPanel)
-    bpy.utils.register_class(ccRenderVairables)
-    bpy.utils.unregister_class(ccModalTimerOperator)
-    bpy.utils.unregister_class(ccClipboardOperator)
+    # bpy.utils.unregister_class(ccRenderPanel)
+    # bpy.utils.register_class(ccRenderVairables)
+    # bpy.utils.unregister_class(ccModalTimerOperator)
+    # bpy.utils.unregister_class(ccClipboardOperator)
+
+    for cls in reversed(classes):
+        bpy.utils.unregister_class(cls)
 
 if __name__ == "__main__":
     register()

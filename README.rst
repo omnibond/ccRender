@@ -6,12 +6,12 @@ An addon for Blender that renders a blend file to the cloud. This uses paramiko 
 Python requirements
 -------------------
 
-Operating System's Python envirionment **must match** with Blender's Python envirionment. Currently this addon supports Python 3.5. Depending on the operating system would determine the following methods for instalation or verifying of Python and pip:
+Operating System's Python envirionment **must match** with Blender's Python envirionment. Currently this addon supports Python 3.5 or later. Depending on the operating system would determine the following methods for instalation or verifying of Python and pip:
 
-Ubuntu 16.04
-^^^^^^^^^^^^
+Ubuntu 16.04 or later
+^^^^^^^^^^^^^^^^^^^^^
 
-Python 3.5 should be included by default, however Python3's pip might not. To install pip onto your Python3 (not Python), use the following command:
+Python 3.5 (or whatever the latest version of Python is included with your version of Ubuntu) should be included by default, however Python3's pip might not. To install pip onto your Python3 (not Python), use the following command:
 
 ::
    
@@ -43,7 +43,7 @@ and then download and install pip to the specific Python version (e.g. Python 3.
 Windows
 ^^^^^^^
 
-Python 3.5 can be download and install directly from `Python.org <https://www.python.org/downloads/release/python-353/>`_. When installing, make sure that PATH option is enabled or manually add python's main directory and scripts subfolder to the PATH in the Environment Vairables. 
+Python 3.5 or later can be download and install directly from `Python.org <https://www.python.org/downloads/>`_. When installing, make sure that PATH option is enabled or manually add python's main directory and scripts subfolder to the PATH in the Environment Vairables. 
 
 Pip should be included with Python's installation. If you wish to install it, download `get-pip.py <https://bootstrap.pypa.io/get-pip.py>`_ to a folder on your computer.
 
@@ -57,13 +57,13 @@ Paramiko & Pyperclip requirements
 
 Paramiko and Pyperclip has to be included into Blender's Python environment. This package includes the installation needed for both of the modules.  Ubuntu's installation differs than Windows in terms of dependencies though the installation is the same. 
 
-Ubuntu 14.04 & 16.04
-^^^^^^^^^^^^^^^^^^^^
+Ubuntu 14.04 & 16.04 or later
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Install the following dependencies first.
+Install the following dependencies first (replace python3.x with whatever version of python you're using if it's a later version than python 3.5).
 ::
 
-    sudo apt-get install build-essential libffi-dev libssl-dev python3.5-dev
+    sudo apt-get install build-essential libffi-dev libssl-dev python3.x-dev
 
 
 Then use the following commands:
@@ -83,7 +83,7 @@ If you wish to install them through Github, the process is similar. You will nee
 Then use the following command after creating the folders :
 ::
 
-    pip3 install --target=/home/<user>/blendscripts/modules/ git+https://github.com/omnibond/ccRender
+    pip3 install --target=/home/<user>/blenderscripts/modules/ git+https://github.com/omnibond/ccRender
 
 
 If you are using Ubuntu 14.04, the process is the same except use pip3.5 instead of pip3 to ensure that the package is installing to the right Python version.

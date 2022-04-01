@@ -19,8 +19,8 @@ from scp import SCPClient
 bl_info = {
     "name": "CC Render",
     "author": "Omnibond",
-    "version": (1, 0, 1),
-    "blender": (2, 80, 0),
+    "version": (1, 0, 2),
+    "blender": (3, 1, 0),
     "location": "View3D > Tools (Sidebar) > ccSimple_Render",
     "description": "Cloudy Cluster Simple Render",
     "warning": "",
@@ -570,13 +570,16 @@ class Communicator():
                     "#creation wizard when launching the cluster.\n"
                     "export SHARED_FS_NAME=/mnt/{sFSNAME} \n\n"
 
-                    "#Blender version for Scheduler\n"
-                    "module add blender/2.76\n\n"
+                    "#Blender Source is the directory where blender is installed\n"
+                    "export BLENDER_SOURCE=/software/blender/3.10/\n\n"
 
-                    "cd $SHARED_FS_NAME/blender/2.76\n"
+                    "#Blender version for Scheduler\n"
+                    "module add blender/3.10\n\n"
+
+                    "cd $BLENDER_SOURCE\n"
                     "mpiexec blender -b $SHARED_FS_NAME/{sBlendDIR}/{sBlendFile} -o "
                     "$SHARED_FS_NAME'/{sBlendDIR}/frames/frame_#' -E CYCLES -F PNG -a &&\n"
-                    "mpirun printf '+' >> $SHARED_FS_NAME/{sBlendDIR}/blendDone.txt\n"
+                    "mpiexec printf '+' >> $SHARED_FS_NAME/{sBlendDIR}/blendDone.txt\n"
                 )
 
                 slurmContext = {
@@ -592,6 +595,8 @@ class Communicator():
                 slurmTemp = (
                     "#!/bin/bash\n\n"
 
+                    "#CC -gcpit c2-standard-4\n\n"
+
                     "#Slurm HPC Scheduler\n\n"
 
                     "#SBATCH -N {sNodes}\n\n"
@@ -600,13 +605,16 @@ class Communicator():
                     "#creation wizard when launching the cluster.\n"
                     "export SHARED_FS_NAME=/mnt/{sFSNAME} \n\n"
 
-                    "#Blender version for Scheduler\n"
-                    "module add blender/2.76\n\n"
+                    "#Blender Source is the directory where blender is installed\n"
+                    "export BLENDER_SOURCE=/software/blender/3.10/\n\n"
 
-                    "cd $SHARED_FS_NAME/blender/2.76\n"
+                    "#Blender version for Scheduler\n"
+                    "module add blender/3.10\n\n"
+
+                    "cd $BLENDER_SOURCE\n"
                     "mpiexec blender -b $SHARED_FS_NAME/{sBlendDIR}/{sBlendFile} -o "
                     "$SHARED_FS_NAME'/{sBlendDIR}/frames/frame_#' -E CYCLES -F PNG -a &&\n"
-                    "mpirun printf '+' >> $SHARED_FS_NAME/{sBlendDIR}/blendDone.txt\n"
+                    "mpiexec printf '+' >> $SHARED_FS_NAME/{sBlendDIR}/blendDone.txt\n"
                 )
 
                 slurmContext = {
@@ -654,13 +662,16 @@ class Communicator():
                     "#creation wizard when launching the cluster.\n"
                     "export SHARED_FS_NAME=/mnt/{tFSNAME} \n\n"
 
-                    "#Blender version for Scheduler\n"
-                    "module add blender/2.76\n\n"
+                    "#Blender Source is the directory where blender is installed\n"
+                    "export BLENDER_SOURCE=/software/blender/3.10/\n\n"
 
-                    "cd $SHARED_FS_NAME/blender/2.76\n"
+                    "#Blender version for Scheduler\n"
+                    "module add blender/3.10\n\n"
+
+                    "cd $BLENDER_SOURCE\n"
                     "mpiexec blender -b $SHARED_FS_NAME/{tBlendDIR}/{tBlendFile} -o "
                     "$SHARED_FS_NAME'/{tBlendDIR}/frames/frame_#' -E CYCLES -F PNG -a &&\n"
-                    "mpirun printf '+' >> $SHARED_FS_NAME/{tBlendDIR}/blendDone.txt\n"
+                    "mpiexec printf '+' >> $SHARED_FS_NAME/{tBlendDIR}/blendDone.txt\n"
                 )
 
                 torqueContext = {
@@ -676,21 +687,27 @@ class Communicator():
                 torqueTemp = (
                     "#!/bin/bash\n\n"
 
+                    "#CC -gcpit c2-standard-4\n\n"
+
                     "#Torque/Maui HPC Scheduler\n\n"
 
                     "#PBS -l nodes={tNodes}\n\n"
+
 
                     "#Shared FS is the same name specified in the CloudyCluster\n"
                     "#creation wizard when launching the cluster.\n"
                     "export SHARED_FS_NAME=/mnt/{tFSNAME} \n\n"
 
-                    "#Blender version for Scheduler\n"
-                    "module add blender/2.76\n\n"
+                    "#Blender Source is the directory where blender is installed\n"
+                    "export BLENDER_SOURCE=/software/blender/3.10/\n\n"
 
-                    "cd $SHARED_FS_NAME/blender/2.76\n"
+                    "#Blender version for Scheduler\n"
+                    "module add blender/3.10\n\n"
+
+                    "cd $BLENDER_SOURCE\n"
                     "mpiexec blender -b $SHARED_FS_NAME/{tBlendDIR}/{tBlendFile} -o "
                     "$SHARED_FS_NAME'/{tBlendDIR}/frames/frame_#' -E CYCLES -F PNG -a &&\n"
-                    "mpirun printf '+' >> $SHARED_FS_NAME/{tBlendDIR}/blendDone.txt\n"
+                    "mpiexec printf '+' >> $SHARED_FS_NAME/{tBlendDIR}/blendDone.txt\n"
                 )
 
                 torqueContext = {
@@ -811,7 +828,7 @@ class Communicator():
                         self.frameIdx = int(index + 1)
                         self.ccIndex = abs(self.frameIdx - self.nodeIdx)
                         self.rDone = int((self.ccIndex / self.frameTOT) * 100)
-                    if self.rDone > 100:
+                    if self.rDone >= 100:
                         self.progressText = ('Progress: 100%')
                         time.sleep(10)
                     else:
@@ -998,7 +1015,7 @@ class ccModalTimerOperator(bpy.types.Operator):
     def execute(self, context):
         wm = context.window_manager
         self._count = 0
-        self._timer = wm.event_timer_add(0.1, context.window)
+        self._timer = wm.event_timer_add(0.1, window=context.window)
         wm.modal_handler_add(self)
         communicator.finished = False
 
@@ -1013,7 +1030,7 @@ class ccModalTimerOperator(bpy.types.Operator):
 
     def cancel(self, context):
         wm = context.window_manager
-        context.area.header_text_set()
+        context.area.header_text_set(None)
         wm.event_timer_remove(self._timer)
         return {'CANCELLED'}
 

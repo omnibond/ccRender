@@ -8,7 +8,7 @@ copy over the file, and evoke a job to execute Blender rendering all nodes.
 Python requirements
 -------------------
 
-At the time of this instruction, the latest version of Blender is 3.1 that comes bundled with Python 3.10. You will need to make sure you are using that version of Python in order for Blender to recgnoize its dependencies.
+At the time of this instruction, the latest version of Blender is 3.1 that comes bundled with Python 3.10. You will need to make sure you are using that version of Python in order for Blender to recognize its dependencies.
 
 
 Ubuntu (adjust this for Mac and other Linux Distributions)
